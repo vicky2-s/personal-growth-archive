@@ -54,9 +54,11 @@ window.SEED = (function () {
     },
     {
       id: 'p3', name: '个人数字档案馆', project_type: '项目', status: '进行中',
-      start_date: '2026-09-01', end_date: null, tags: ['网站', '个人成长', '数字化'],
-      description: '搭建自己的成长档案馆网站，用证据驱动的方式记录经历与能力成长。',
-      reflection: '', created_at: '2026-09-01', updated_at: '2026-09-06',
+      start_date: '2026-09-07', end_date: null, tags: ['网站', '个人成长', '数字化', 'AI'],
+      outcomes: ['完整可用的网站', 'AI 文件/日记分析', '简历导出', '数据库设计'],
+      description: '独立设计并开发「人生档案馆」个人成长网站：用「证据驱动成长」的方式记录项目、文件、能力证据与日记，接入 AI 分析，支持能力地图、时间轴、成就与简历导出。技术栈 HTML/CSS/原生 JS + Supabase，部署于 GitHub Pages。',
+      reflection: '从 0 到 1 独立完成一个全栈网站，理解了证据驱动的产品设计理念。',
+      created_at: '2026-09-07', updated_at: '2026-09-07',
     },
     {
       id: 'p4', name: '永乐宫夜游活动', project_type: '活动', status: '已完成',
@@ -88,6 +90,8 @@ window.SEED = (function () {
     { id: 'r4', project_id: 'p2', role_name: '讲解员' },
     { id: 'r5', project_id: 'p3', role_name: '策划者' },
     { id: 'r6', project_id: 'p3', role_name: '开发者' },
+    { id: 'r9', project_id: 'p3', role_name: '产品经理' },
+    { id: 'r10', project_id: 'p3', role_name: 'UI设计师' },
     { id: 'r7', project_id: 'p4', role_name: '讲解员' },
     { id: 'r8', project_id: 'p6', role_name: '主讲人' },
   ];
@@ -104,6 +108,11 @@ window.SEED = (function () {
     { id: 'c8', project_id: 'p5', description: '设计并开发统计网站' },
     { id: 'c9', project_id: 'p6', description: '主讲历史文化主题' },
     { id: 'c10', project_id: 'p3', description: '设计网站结构与数据库' },
+    { id: 'c11', project_id: 'p3', description: '产品定位与需求梳理' },
+    { id: 'c12', project_id: 'p3', description: '编写前端（HTML/CSS/JS 模块化）' },
+    { id: 'c13', project_id: 'p3', description: '实现 AI 分析（接入 DeepSeek）' },
+    { id: 'c14', project_id: 'p3', description: '设计 UI/UX' },
+    { id: 'c15', project_id: 'p3', description: '部署到 GitHub Pages' },
   ];
 
   // ---- 文件 ----
@@ -129,14 +138,20 @@ window.SEED = (function () {
     { id: 'e9', skill_id: 'skill-23', project_id: 'p5', contribution_id: 'c8', evidence_description: '开发统计网站', evidence_date: '2026-06-15', source: '博物馆统计网站' },
     { id: 'e10', skill_id: 'skill-8', project_id: 'p6', contribution_id: 'c9', evidence_description: '主讲历史文化主题', evidence_date: '2026-05-10', source: '博物馆夫子讲堂' },
     { id: 'e11', skill_id: 'skill-6', project_id: 'p4', contribution_id: 'c7', evidence_description: '向游客口头讲解', evidence_date: '2026-07-20', source: '永乐宫夜游活动' },
-    { id: 'e12', skill_id: 'skill-16', project_id: 'p3', contribution_id: 'c10', evidence_description: '设计项目结构', evidence_date: '2026-09-01', source: '个人数字档案馆' },
+    { id: 'e12', skill_id: 'skill-16', project_id: 'p3', contribution_id: 'c10', evidence_description: '设计项目结构与数据库', evidence_date: '2026-09-07', source: '个人数字档案馆' },
     { id: 'e13', skill_id: 'skill-7', project_id: 'p2', contribution_id: 'c6', evidence_description: '撰写讲解词', evidence_date: '2026-05-05', source: '博物馆讲解工作' },
+    { id: 'e14', skill_id: 'skill-23', project_id: 'p3', contribution_id: 'c12', evidence_description: '独立开发完整网站（前端+后端+部署）', evidence_date: '2026-09-07', source: '个人数字档案馆' },
+    { id: 'e15', skill_id: 'skill-21', project_id: 'p3', contribution_id: 'c13', evidence_description: '接入并实现 AI 文件分析与日记分析', evidence_date: '2026-09-07', source: '个人数字档案馆' },
+    { id: 'e16', skill_id: 'skill-22', project_id: 'p3', contribution_id: 'c10', evidence_description: '设计数据库结构与权限模型', evidence_date: '2026-09-07', source: '个人数字档案馆' },
+    { id: 'e17', skill_id: 'skill-24', project_id: 'p3', contribution_id: 'c15', evidence_description: '搭建个人数字档案系统并上线', evidence_date: '2026-09-07', source: '个人数字档案馆' },
+    { id: 'e18', skill_id: 'skill-13', project_id: 'p3', contribution_id: 'c14', evidence_description: '设计网站 UI 与视觉风格', evidence_date: '2026-09-07', source: '个人数字档案馆' },
   ];
 
   // ---- 反思 ----
   const reflections = [
     { id: 'rf1', project_id: 'p1', learned: '敢于在更大的舞台表达。', difficulty: '讲解稿的记忆与临场发挥。', improvement: '增加模拟演练的次数。', created_at: '2026-08-20' },
     { id: 'rf2', project_id: 'p4', learned: '如何用节奏调动观众注意力。', difficulty: '夜间光线与声音条件。', improvement: '准备更便携的扩音设备。', created_at: '2026-07-31' },
+    { id: 'rf3', project_id: 'p3', learned: '从 0 到 1 独立完成一个全栈网站，理解了「证据驱动成长」的产品设计理念。', difficulty: '调试 Supabase 权限（RLS/GRANT）、AI 接入时的返回格式问题。', improvement: '后续加入更多简历模板、年度成长报告、数据备份导出。', created_at: '2026-09-07' },
   ];
 
   // ---- 已解锁成就 ----
