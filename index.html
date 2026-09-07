@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f3" />
+  <title>人生档案馆</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 桌面端左侧导航 -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">🏛️</div>
+        <div class="brand-text">
+          <div class="brand-name">人生档案馆</div>
+          <div class="brand-sub">Personal Growth Archive</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav-item" data-path="dashboard" href="#/">🏠 <span>首页</span></a>
+        <a class="nav-item" data-path="projects" href="#/projects">📁 <span>项目</span></a>
+        <a class="nav-item" data-path="archive" href="#/archive">🗂️ <span>档案</span></a>
+        <a class="nav-item" data-path="skills" href="#/skills">🧭 <span>能力地图</span></a>
+        <a class="nav-item" data-path="timeline" href="#/timeline">🕰️ <span>时间轴</span></a>
+        <a class="nav-item" data-path="achievements" href="#/achievements">🏆 <span>成就</span></a>
+        <a class="nav-item" data-path="settings" href="#/settings">⚙️ <span>设置</span></a>
+      </nav>
+      <div class="sidebar-foot">
+        <p class="hint">文件是经历的证据<br>能力由行为积累</p>
+      </div>
+    </aside>
+
+    <!-- 右侧内容区 -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-search">
+          <span class="search-icon">🔍</span>
+          <input type="search" id="global-search" placeholder="搜索项目、文件、能力证据…" />
+        </div>
+        <div id="topbar-user" class="topbar-user"></div>
+      </header>
+      <div id="view" class="view"></div>
+    </main>
+
+    <!-- 手机端底部导航 -->
+    <nav class="bottombar">
+      <a class="nav-item" data-path="dashboard" href="#/">🏠<span>首页</span></a>
+      <a class="nav-item" data-path="projects" href="#/projects">📁<span>项目</span></a>
+      <a class="nav-item" data-path="archive" href="#/archive">🗂️<span>档案</span></a>
+      <a class="nav-item" data-path="skills" href="#/skills">🧭<span>能力</span></a>
+      <a class="nav-item" data-path="timeline" href="#/timeline">🕰️<span>时间轴</span></a>
+    </nav>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+
+  <!-- Supabase CDN（未配置时也可正常运行演示模式） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 基础层 -->
+  <script src="js/config.js"></script>
+  <script src="js/seed.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/router.js"></script>
+  <!-- 页面层 -->
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/projects.js"></script>
+  <script src="js/pages/archive.js"></script>
+  <script src="js/pages/skills.js"></script>
+  <script src="js/pages/timeline.js"></script>
+  <script src="js/pages/achievements.js"></script>
+  <script src="js/pages/settings.js"></script>
+  <!-- 入口 -->
+  <script src="js/app.js"></script>
+</body>
+</html>
