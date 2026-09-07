@@ -52,6 +52,12 @@
         </section>
 
         <section class="card">
+          <div class="section-head"><h2>📄 导出</h2></div>
+          <p class="hint">把最重要的经历汇总成一页纸简历。</p>
+          <a class="btn btn-primary" href="#/resume">生成简历 / 下载 PDF</a>
+        </section>
+
+        <section class="card">
           <div class="section-head"><h2>ℹ️ 关于</h2></div>
           <p class="hint">人生档案馆 · Personal Growth Archive<br>
           文件是人生经历的证据，能力由真实行为不断积累。</p>

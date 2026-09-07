@@ -416,6 +416,52 @@ h2 { font-size: 16px; font-weight: 650; }
 .storage-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-muted); font-size: 13px; }
 
 /* =====================================================================
+ * 简历 / 经历档案
+ * ===================================================================== */
+.resume-toolbar { display: flex; gap: 8px; }
+.resume-sheet {
+  background: #fff; border: 1px solid var(--border); border-radius: 4px;
+  box-shadow: var(--shadow-md); max-width: 820px; margin: 0 auto; padding: 48px 52px;
+  color: #1a1a1a; font-size: 14px; line-height: 1.7;
+}
+.resume-head { text-align: center; margin-bottom: 20px; }
+.resume-name { font-size: 28px; font-weight: 700; letter-spacing: 2px; }
+.resume-contact { color: #555; font-size: 13px; margin-top: 4px; }
+
+.resume-sec { margin-top: 18px; }
+.resume-sec-title {
+  font-size: 15px; font-weight: 700; letter-spacing: 1px;
+  border-bottom: 2px solid #2a2a28; padding-bottom: 4px; margin-bottom: 10px;
+}
+.resume-intro { color: #333; }
+
+.resume-domains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; margin-bottom: 10px; }
+.resume-domain { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.rd-name { flex: 1; }
+.rd-count { color: #777; font-size: 12px; }
+.resume-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.resume-chip { background: #f2f1ee; color: #333; font-size: 12.5px; padding: 2px 10px; border-radius: 14px; }
+
+.resume-exp { margin-bottom: 12px; }
+.resume-exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.re-name { font-weight: 700; font-size: 14.5px; }
+.re-meta { color: #666; font-size: 12.5px; white-space: nowrap; }
+.re-line { font-size: 13px; color: #333; margin-top: 3px; }
+.re-line b { color: #555; font-weight: 600; }
+
+.resume-achs { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.resume-ach { font-size: 13px; }
+.resume-foot { text-align: center; margin-top: 22px; font-size: 11px; }
+
+/* 打印：只输出简历页，隐藏导航和按钮 */
+@media print {
+  .sidebar, .topbar, .bottombar, .no-print, .hint { display: none !important; }
+  .main, .view { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  body { background: #fff !important; }
+  .resume-sheet { box-shadow: none; border: none; max-width: none; margin: 0; padding: 20px 24px; }
+}
+
+/* =====================================================================
  * 模态弹窗
  * ===================================================================== */
 #modal-root { position: fixed; inset: 0; z-index: 100; pointer-events: none; }

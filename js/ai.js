@@ -375,5 +375,30 @@ window.AI = (function () {
     }
   }
 
-  return { config, analyzeFile, analyzeAndShow, analyzeDiary, reviewDiary, showResultModal, test };
+  // 简历自我评价（返回纯文本，不解析 JSON）
+  async function resumeSummary(payload, onProgress) {
+    const cfg = config.get();
+    if (!cfg.apiKey) throw new Error('请先在「设置 → AI 分析」里填写 API Key');
+    if (onProgress) onProgress('AI 正在生成自我评价…');
+    const url = cfg.baseUrl.replace(/\/+$/, '') + '/chat/completions';
+    const system = '你是简历写作助手。请根据用户真实的经历数据，写一段 80-120 字的「自我评价/个人简介」。\n'
+      + '要求：客观、有依据、不夸大，用第一人称，突出能力积累与成长，避免空话套话。只输出一段纯文本，不要标题、不要 JSON。';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.apiKey },
+      body: JSON.stringify({
+        model: cfg.model || 'deepseek-chat',
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: '经历数据：\n' + JSON.stringify(payload, null, 1) },
+        ],
+        temperature: 0.6,
+      }),
+    });
+    if (!res.ok) throw new Error('AI 请求失败（' + res.status + '）：' + (await res.text()).slice(0, 200));
+    const data = await res.json();
+    return (data.choices && data.choices[0] && data.choices[0].message.content) || '';
+  }
+
+  return { config, analyzeFile, analyzeAndShow, analyzeDiary, reviewDiary, resumeSummary, showResultModal, test };
 })();
