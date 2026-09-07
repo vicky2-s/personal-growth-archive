@@ -15,6 +15,7 @@ window.Store = (function () {
     user: null,
     projects: [], roles: [], contributions: [], files: [],
     evidence: [], reflections: [], skills: [], achievements: [], userAchievements: [],
+    aiAnalysis: [],
   };
 
   let mode = 'demo';
@@ -41,6 +42,7 @@ window.Store = (function () {
       cache.evidence = JSON.parse(JSON.stringify(s.evidence));
       cache.reflections = JSON.parse(JSON.stringify(s.reflections));
       cache.userAchievements = JSON.parse(JSON.stringify(s.userAchievements));
+      cache.aiAnalysis = s.aiAnalysis ? JSON.parse(JSON.stringify(s.aiAnalysis)) : [];
       saveDemo();
     }
   }
@@ -68,6 +70,7 @@ window.Store = (function () {
       ['skills', 'skills'],
       ['achievements', 'achievements'],
       ['userAchievements', 'user_achievements'],
+      ['aiAnalysis', 'ai_analysis'],
     ];
     for (const [k, t] of tables) {
       const { data, error } = await c.from(t).select('*');
@@ -473,6 +476,23 @@ window.Store = (function () {
   }
 
   // =====================================================================
+  // AI 分析结果
+  // =====================================================================
+  const ai = {
+    list: () => cache.aiAnalysis,
+    forFile: fileId => cache.aiAnalysis.filter(a => a.file_id === fileId),
+    save: async function (data) {
+      if (isDemo()) {
+        const r = Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now() }, data);
+        cache.aiAnalysis.unshift(r); saveDemo(); return r;
+      }
+      const { data: d, error } = await client.from('ai_analysis').insert(Object.assign({}, data, { user_id: cache.user.id })).select().single();
+      if (error) throw error;
+      cache.aiAnalysis.unshift(d); return d;
+    },
+  };
+
+  // =====================================================================
   // 导出
   // =====================================================================
   return {
@@ -484,6 +504,7 @@ window.Store = (function () {
     effectiveCount,
     projects, roles, contributions, reflections,
     files, evidence, skillsView, achievements, timeline,
+    ai,
     search, stats, recentActivity,
     // 供调试 / 重置演示数据
     _resetDemo: function () { localStorage.removeItem(LS_KEY); loadDemo(); },

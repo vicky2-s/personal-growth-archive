@@ -5,6 +5,7 @@
 (function () {
   const UI = window.UI;
   const Store = window.Store;
+  const AI = window.AI;
 
   window.Router.register('/settings', {
     title: '设置',
@@ -34,6 +35,21 @@
           <p class="hint">当前处于演示模式，数据保存在浏览器本地，不会上传到云端。</p>
           <button class="btn btn-danger" id="st-reset">重置演示数据</button>
         </section>` : ''}
+
+        <section class="card">
+          <div class="section-head"><h2>🤖 AI 分析</h2></div>
+          <p class="hint">浏览器直连 OpenAI 兼容接口（如 DeepSeek）。密钥仅保存在本地浏览器。</p>
+          <div class="form-stack">
+            ${UI.field('接口地址', `<input type="text" id="ai-base" placeholder="https://api.deepseek.com" />`)}
+            ${UI.field('模型名', `<input type="text" id="ai-model" placeholder="deepseek-chat" />`)}
+            ${UI.field('API Key', `<input type="password" id="ai-key" placeholder="sk-..." autocomplete="off" />`)}
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary" id="ai-save">保存配置</button>
+              <button class="btn" id="ai-test">测试连接</button>
+            </div>
+            <p class="hint" id="ai-status"></p>
+          </div>
+        </section>
 
         <section class="card">
           <div class="section-head"><h2>ℹ️ 关于</h2></div>
@@ -71,6 +87,26 @@
         UI.confirm('确定重置演示数据？所有本地改动将丢失。', () => {
           Store._resetDemo(); UI.toast('已重置'); window.Router.go();
         }, { danger: true, okLabel: '重置' });
+      };
+
+      // AI 配置
+      const cfg = AI.config.get();
+      const aiBase = document.getElementById('ai-base');
+      const aiModel = document.getElementById('ai-model');
+      const aiKey = document.getElementById('ai-key');
+      if (aiBase) { aiBase.value = cfg.baseUrl || ''; aiModel.value = cfg.model || ''; aiKey.value = cfg.apiKey || ''; }
+      const aiSave = document.getElementById('ai-save');
+      if (aiSave) aiSave.onclick = () => {
+        AI.config.set({ baseUrl: aiBase.value.trim(), model: aiModel.value.trim(), apiKey: aiKey.value.trim() });
+        UI.toast('AI 配置已保存');
+      };
+      const aiTest = document.getElementById('ai-test');
+      if (aiTest) aiTest.onclick = async () => {
+        AI.config.set({ baseUrl: aiBase.value.trim(), model: aiModel.value.trim(), apiKey: aiKey.value.trim() });
+        const status = document.getElementById('ai-status');
+        status.textContent = '测试中…';
+        try { status.textContent = '✅ ' + (await AI.test()); }
+        catch (e) { status.textContent = '❌ ' + e.message; }
       };
     },
   });

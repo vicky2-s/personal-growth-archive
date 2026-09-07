@@ -84,6 +84,7 @@
         const id = btn.dataset.id;
         const f = Store.files.get(id);
         switch (btn.dataset.action) {
+          case 'ai': window.AI.analyzeAndShow(f); break;
           case 'download': downloadFile(f); break;
           case 'edit': fileEditModal(f); break;
           case 'move': moveFileModal(id); break;
@@ -111,6 +112,7 @@
       </div>
       ${UI.chips(f.tags)}
       <div class="file-actions">
+        <button class="btn btn-xs" data-action="ai" data-id="${f.id}">🤖 AI</button>
         <button class="btn btn-xs" data-action="download" data-id="${f.id}">下载</button>
         <button class="btn btn-xs" data-action="edit" data-id="${f.id}">编辑</button>
         <button class="btn btn-xs" data-action="move" data-id="${f.id}">移动</button>

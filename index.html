@@ -59,12 +59,24 @@
 
   <!-- Supabase CDN（未配置时也可正常运行演示模式） -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 文档解析组件（AI 分析用：docx / pdf / pptx / xlsx） -->
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    }
+  </script>
   <!-- 基础层 -->
   <script src="js/config.js"></script>
   <script src="js/seed.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/ai.js"></script>
   <script src="js/router.js"></script>
   <!-- 页面层 -->
   <script src="js/pages/dashboard.js"></script>

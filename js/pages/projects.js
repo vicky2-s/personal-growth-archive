@@ -271,6 +271,7 @@
       <div class="file-sub">${(f.file_type || '').toUpperCase()} · ${fmtSize(f.file_size)}</div>
       ${UI.chips(f.tags)}
       <div class="file-actions">
+        <button class="btn btn-xs" data-action="ai-file" data-id="${f.id}">🤖 AI</button>
         <button class="btn btn-xs" data-action="file-download" data-id="${f.id}">下载</button>
         ${inProject ? `<button class="btn btn-xs" data-action="file-move" data-id="${f.id}">移动</button>` : ''}
         <button class="btn btn-xs btn-danger" data-action="file-remove" data-id="${f.id}">删除</button>
@@ -345,6 +346,7 @@
         pickAndUpload(pid); break;
       }
       case 'file-download': { await downloadFile(Store.files.get(id)); break; }
+      case 'ai-file': { window.AI.analyzeAndShow(Store.files.get(id)); break; }
       case 'file-move': { moveFileModal(id); break; }
       case 'file-remove': {
         const f = Store.files.get(id);

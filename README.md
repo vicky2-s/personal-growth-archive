@@ -44,3 +44,14 @@ docs/                   设计文档
 5. 成长时间轴
 
 AI 功能已预留接口（`ai_analysis` 表 + `Store.ai.analyze()`），MVP 使用模拟数据。
+
+## AI 分析（已实现）
+
+文件上传后点击「🤖 AI」即可自动分析。浏览器直连 OpenAI 兼容接口（默认 DeepSeek）：
+
+1. 打开 **设置 → AI 分析**，填入接口地址 / 模型名 / API Key（密钥仅存本地浏览器）。
+2. 在档案页或项目详情，点文件的「🤖 AI」按钮。
+3. 前端自动提取文本（支持 txt/md/docx/pdf/pptx/xlsx）→ 调用 AI → 返回摘要、关键词、贡献、推荐能力。
+4. 勾选确认后，自动生成能力证据（`ai_suggested=true`）。
+
+支持的模型：DeepSeek、OpenAI、Kimi、Qwen、智谱等任意 OpenAI 兼容服务，改 base URL + 模型名即可。

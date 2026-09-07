@@ -355,6 +355,19 @@ h2 { font-size: 16px; font-weight: 650; }
 .auth-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
 /* =====================================================================
+ * AI 分析结果
+ * ===================================================================== */
+.ai-summary { font-weight: 650; font-size: 15px; margin-bottom: 6px; }
+.ai-detail { color: var(--text-muted); font-size: 13.5px; white-space: pre-wrap; }
+.ai-keywords { margin: 10px 0; }
+.ai-block { margin-top: 14px; }
+.ai-block b { font-size: 13px; color: var(--text-muted); }
+.ai-block ul { margin: 6px 0 0 18px; font-size: 14px; }
+.ai-block select { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 6px; background: var(--bg-card); }
+.ai-skill-opt { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-bottom: 1px solid var(--border); font-size: 14px; cursor: pointer; }
+.ai-skill-opt input { accent-color: var(--accent); }
+
+/* =====================================================================
  * 模态弹窗
  * ===================================================================== */
 #modal-root { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
