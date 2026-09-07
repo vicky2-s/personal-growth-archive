@@ -25,9 +25,17 @@ create table if not exists public.users (
   display_name  text not null default '新用户',
   avatar_url    text,
   bio           text,                       -- 个人简介
+  phone         text,                       -- 电话（简历用）
+  city          text,                       -- 所在城市
+  job_title     text,                       -- 求职意向 / 目标岗位
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- 幂等补丁：老版本 users 表可能缺这些字段
+alter table public.users add column if not exists phone text;
+alter table public.users add column if not exists city text;
+alter table public.users add column if not exists job_title text;
 
 -- =====================================================================
 -- 2. 项目表 projects
@@ -238,6 +246,29 @@ create table if not exists public.diary_entries (
 alter table public.diary_entries add column if not exists external_analysis text;
 
 -- =====================================================================
+-- 13. 简历表 resumes
+--     存档用户生成的简历，支持多模板、编辑、删除、AI 匹配经历。
+-- =====================================================================
+create table if not exists public.resumes (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references public.users(id) on delete cascade,
+
+  title          text not null default '我的简历', -- 简历名称
+  template       text not null default 'simple',   -- 模板：simple(简洁) / columns(两栏)
+  job_title      text,                            -- 求职意向 / 目标岗位
+  target_company text,                            -- 目标公司 / 岗位描述（AI 匹配用）
+  summary        text,                            -- 自我评价（可编辑）
+  phone          text,
+  city           text,
+  email          text,
+  photo_url      text,                            -- 证件照
+  project_ids    text[] not null default '{}',    -- 选中的经历（项目 id 数组）
+
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now()
+);
+
+-- =====================================================================
 -- 索引（提升查询性能）
 -- =====================================================================
 create index if not exists idx_projects_user      on public.projects(user_id);
@@ -251,6 +282,7 @@ create index if not exists idx_roles_project      on public.project_roles(projec
 create index if not exists idx_reflections_project on public.reflections(project_id);
 create index if not exists idx_ua_user            on public.user_achievements(user_id);
 create index if not exists idx_diary_user         on public.diary_entries(user_id);
+create index if not exists idx_resumes_user        on public.resumes(user_id);
 
 -- =====================================================================
 -- 触发器：auth 注册后自动创建 public.users 行
@@ -312,6 +344,7 @@ alter table public.achievements     enable row level security;
 alter table public.user_achievements enable row level security;
 alter table public.ai_analysis      enable row level security;
 alter table public.diary_entries    enable row level security;
+alter table public.resumes          enable row level security;
 
 -- 先删除可能已存在的同名策略（保证可重复执行）
 drop policy if exists users_self       on public.users;
@@ -326,6 +359,7 @@ drop policy if exists achievements_read on public.achievements;
 drop policy if exists ua_self          on public.user_achievements;
 drop policy if exists ai_self          on public.ai_analysis;
 drop policy if exists diary_self       on public.diary_entries;
+drop policy if exists resumes_self     on public.resumes;
 
 -- users：仅本人可读写
 create policy "users_self" on public.users
@@ -381,6 +415,10 @@ create policy "ai_self" on public.ai_analysis
 
 -- diary_entries：仅本人可读写
 create policy "diary_self" on public.diary_entries
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- resumes：仅本人可读写
+create policy "resumes_self" on public.resumes
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =====================================================================
@@ -499,6 +537,9 @@ grant usage on schema public to anon, authenticated;
 grant all on all tables in schema public to anon, authenticated;
 grant all on all sequences in schema public to anon, authenticated;
 grant execute on all functions in schema public to anon, authenticated;
+
+-- resumes 表显式授权（保险）
+grant all on table public.resumes to anon, authenticated;
 
 -- 让今后新建的表/序列/函数也自动授权
 alter default privileges in schema public grant all on tables to anon, authenticated;

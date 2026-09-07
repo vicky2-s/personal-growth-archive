@@ -8,7 +8,7 @@
 
 window.SEED = (function () {
   // ---- 演示用户 ----
-  const demoUser = { id: 'demo-user-1', email: 'liyang@example.com', display_name: '李杨', bio: '博物馆讲解员 · 记录成长' };
+  const demoUser = { id: 'demo-user-1', email: 'liyang@example.com', display_name: '李杨', bio: '博物馆讲解员 · 记录成长', phone: '138-0000-0000', city: '成都', job_title: '讲解员 / 内容策划' };
 
   // ---- 技能库（与 schema.sql 种子一致，30 项）----
   const skills = [
@@ -176,7 +176,7 @@ window.SEED = (function () {
   const initial = {
     user: demoUser,
     skills, achievements, projects, roles, contributions, files,
-    evidence, reflections, userAchievements, diary,
+    evidence, reflections, userAchievements, diary, resumes: [],
   };
 
   return { initial: initial, user: demoUser };

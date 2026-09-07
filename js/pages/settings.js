@@ -20,6 +20,11 @@
           <div class="form-stack">
             ${UI.field('昵称', `<input type="text" id="st-name" value="${UI.esc(u.display_name || '')}" />`)}
             ${UI.field('个人简介', `<textarea id="st-bio" rows="3">${UI.esc(u.bio || '')}</textarea>`)}
+            <div class="field-row">
+              ${UI.field('电话', `<input type="text" id="st-phone" value="${UI.esc(u.phone || '')}" />`)}
+              ${UI.field('城市', `<input type="text" id="st-city" value="${UI.esc(u.city || '')}" />`)}
+            </div>
+            ${UI.field('求职意向', `<input type="text" id="st-job" value="${UI.esc(u.job_title || '')}" placeholder="如：讲解员 / 内容策划" />`)}
             <button class="btn btn-primary" id="st-save">保存资料</button>
           </div>
         </section>
@@ -70,6 +75,9 @@
           await Store.updateProfile({
             display_name: document.getElementById('st-name').value.trim(),
             bio: document.getElementById('st-bio').value.trim(),
+            phone: document.getElementById('st-phone').value.trim(),
+            city: document.getElementById('st-city').value.trim(),
+            job_title: document.getElementById('st-job').value.trim(),
           });
           UI.toast('资料已保存'); window.Router.go();
         } catch (e) { UI.toast('保存失败：' + e.message); }

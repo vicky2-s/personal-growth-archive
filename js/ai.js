@@ -400,5 +400,20 @@ window.AI = (function () {
     return (data.choices && data.choices[0] && data.choices[0].message.content) || '';
   }
 
-  return { config, analyzeFile, analyzeAndShow, analyzeDiary, reviewDiary, resumeSummary, showResultModal, test };
+  // 简历经历智能匹配：根据目标公司/岗位挑选相关经历
+  async function matchResume(target, projects, onProgress) {
+    const cfg = config.get();
+    if (!cfg.apiKey) throw new Error('请先在「设置 → AI 分析」里填写 API Key');
+    if (!target || !target.trim()) throw new Error('请先填写目标公司/岗位');
+    if (onProgress) onProgress('AI 正在匹配经历…');
+    const system = '你是简历匹配助手。根据用户的目标公司/岗位，从用户的经历中挑选最相关、最有说服力的几项（2-6项），用于写简历。\n'
+      + '只从给定的经历里选，输出 JSON：{"selected":["项目名称"],"reason":"一句话说明匹配逻辑"}。只输出 JSON。';
+    const messages = [
+      { role: 'system', content: system },
+      { role: 'user', content: '目标公司/岗位：' + target + '\n\n用户经历：\n' + JSON.stringify(projects) },
+    ];
+    return chat(cfg, messages, 0.3);
+  }
+
+  return { config, analyzeFile, analyzeAndShow, analyzeDiary, reviewDiary, resumeSummary, matchResume, showResultModal, test };
 })();

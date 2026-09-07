@@ -15,7 +15,7 @@ window.Store = (function () {
     user: null,
     projects: [], roles: [], contributions: [], files: [],
     evidence: [], reflections: [], skills: [], achievements: [], userAchievements: [],
-    aiAnalysis: [], diary: [],
+    aiAnalysis: [], diary: [], resumes: [],
   };
 
   let mode = 'demo';
@@ -45,6 +45,7 @@ window.Store = (function () {
       cache.userAchievements = JSON.parse(JSON.stringify(s.userAchievements));
       cache.aiAnalysis = s.aiAnalysis ? JSON.parse(JSON.stringify(s.aiAnalysis)) : [];
       cache.diary = s.diary ? JSON.parse(JSON.stringify(s.diary)) : [];
+      cache.resumes = s.resumes ? JSON.parse(JSON.stringify(s.resumes)) : [];
       saveDemo();
     }
   }
@@ -74,6 +75,7 @@ window.Store = (function () {
       ['userAchievements', 'user_achievements'],
       ['aiAnalysis', 'ai_analysis'],
       ['diary', 'diary_entries'],
+      ['resumes', 'resumes'],
     ];
     for (const [k, t] of tables) {
       const { data, error } = await c.from(t).select('*');
@@ -642,6 +644,42 @@ window.Store = (function () {
   };
 
   // =====================================================================
+  // 简历
+  // =====================================================================
+  const resumes = {
+    list: () => cache.resumes.slice().sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '')),
+    get: id => cache.resumes.find(r => r.id === id),
+    save: async function (data) {
+      const existing = data.id ? cache.resumes.find(r => r.id === data.id) : null;
+      if (isDemo()) {
+        if (existing) { Object.assign(existing, data, { updated_at: now() }); }
+        else {
+          const r = Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now(), updated_at: now() }, data);
+          cache.resumes.unshift(r);
+        }
+        saveDemo();
+        return existing || cache.resumes[0];
+      }
+      if (existing) {
+        const { data: d, error } = await client.from('resumes').update(data).eq('id', existing.id).select().single();
+        if (error) throw error;
+        Object.assign(existing, d);
+        return existing;
+      }
+      const { data: d, error } = await client.from('resumes').insert(Object.assign({}, data, { user_id: cache.user.id })).select().single();
+      if (error) throw error;
+      cache.resumes.unshift(d);
+      return d;
+    },
+    remove: async function (id) {
+      if (isDemo()) { cache.resumes = cache.resumes.filter(r => r.id !== id); saveDemo(); return; }
+      const { error } = await client.from('resumes').delete().eq('id', id);
+      if (error) throw error;
+      cache.resumes = cache.resumes.filter(r => r.id !== id);
+    },
+  };
+
+  // =====================================================================
   // 导出
   // =====================================================================
   return {
@@ -653,7 +691,7 @@ window.Store = (function () {
     effectiveCount,
     projects, roles, contributions, reflections,
     files, evidence, skillsView, achievements, timeline,
-    ai, diary,
+    ai, diary, resumes,
     onAchievement, unlockAchievements,
     search, stats, storageStats, recentActivity,
     // 供调试 / 重置演示数据
