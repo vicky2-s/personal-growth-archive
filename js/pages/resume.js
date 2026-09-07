@@ -14,6 +14,7 @@
   let editing = null;        // 正在编辑的简历对象
   let photoData = null;      // 证件照（data URL）
   let selectedIds = new Set(); // 选中的项目 id
+  let autoFit = true;        // 自动适配一页
 
   window.Router.register('/resume', {
     title: '导出简历',
@@ -24,7 +25,9 @@
           <p class="sub">把最重要的经历汇总成一页纸，一键生成可下载的简历。</p></div>
           <div class="resume-toolbar">
             <button class="btn btn-primary" id="re-new">＋ 新建简历</button>
+            <button class="btn" id="re-batch">🤖 批量生成多份</button>
             <button class="btn" id="re-print">🖨️ 导出 / 打印 PDF</button>
+            <label class="fit-toggle"><input type="checkbox" id="re-fit" checked /> 自动适配一页</label>
           </div>
         </div>
         <div id="re-saved" class="no-print"></div>
@@ -33,7 +36,9 @@
     },
     mount: function () {
       document.getElementById('re-new').onclick = () => newResume();
+      document.getElementById('re-batch').onclick = () => batchGenerate();
       document.getElementById('re-print').onclick = () => window.print();
+      document.getElementById('re-fit').onchange = e => { autoFit = e.target.checked; fitToPage(); };
       document.getElementById('re-saved').addEventListener('click', onSavedClick);
       renderSaved();
     },
@@ -285,6 +290,64 @@
       projects, template: editing.template,
     };
     el.innerHTML = editing.template === 'columns' ? renderColumns(data) : renderSimple(data);
+    fitToPage();
+  }
+
+  // 自动缩放，保证简历在一页 A4 内
+  function fitToPage() {
+    const sheet = document.querySelector('.resume-sheet');
+    if (!sheet) return;
+    sheet.style.zoom = '';
+    if (!autoFit) return;
+    requestAnimationFrame(() => {
+      sheet.style.zoom = '';
+      const target = 1080; // 约 A4 内容区高度（px）
+      const h = sheet.scrollHeight;
+      if (h > target) sheet.style.zoom = (target / h).toFixed(3);
+    });
+  }
+
+  // 批量生成多份（不同岗位版本）
+  function batchGenerate() {
+    const u = Store.user();
+    const base = editing ? editing : { template: 'simple', phone: u.phone || '', city: u.city || '', email: u.email || '', photo_url: '' };
+    const m = UI.modal({
+      title: '批量生成多份简历',
+      content: `<p class="hint">每行填一个目标公司/岗位，会为每个生成一份专属简历（AI 匹配经历 + 生成自我评价）。</p>
+        <textarea id="re-batch-pos" rows="5" placeholder="博物馆讲解员&#10;新媒体内容运营&#10;活动策划专员"></textarea>
+        <p class="hint" id="re-batch-progress"></p>
+        <button class="btn btn-primary" id="re-batch-go" style="margin-top:8px">开始生成</button>`,
+      actions: [{ label: '关闭', onClick: () => {} }],
+    });
+    document.getElementById('re-batch-go').onclick = async () => {
+      const positions = document.getElementById('re-batch-pos').value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (!positions.length) { UI.toast('请输入至少一个岗位'); return; }
+      if (!AI.config.configured()) { UI.toast('请先在「设置 → AI 分析」里配置 API Key'); return; }
+      const prog = document.getElementById('re-batch-progress');
+      const projects = buildProjects();
+      let done = 0;
+      for (const pos of positions) {
+        prog.textContent = '正在生成：' + pos + '（' + (done + 1) + '/' + positions.length + '）…';
+        try {
+          const match = await AI.matchResume(pos, projects.map(p => ({ name: p.name, type: p.type, roles: p.roles, contributions: p.contributions, outcomes: p.outcomes })));
+          const ids = new Set();
+          (match.selected || []).forEach(n => {
+            const p = projects.find(x => x.name === n) || projects.find(x => x.name.includes(n) || n.includes(x.name));
+            if (p) ids.add(p.id);
+          });
+          const matched = projects.filter(p => ids.has(p.id));
+          const summary = await AI.resumeSummary({ name: u.display_name, job_title: pos, projects: matched.map(p => ({ name: p.name, type: p.type, roles: p.roles, contributions: p.contributions, outcomes: p.outcomes })) });
+          await Store.resumes.save({ title: pos, template: base.template || 'simple', job_title: pos, target_company: pos, summary: (summary || '').trim(), phone: base.phone || '', city: base.city || '', email: base.email || '', photo_url: base.photo_url || '', project_ids: Array.from(ids) });
+          done++;
+        } catch (e) {
+          prog.textContent = (prog.textContent || '') + '\n⚠️ ' + pos + ' 失败：' + e.message;
+        }
+      }
+      prog.textContent = '完成！共生成 ' + done + ' 份。';
+      renderSaved();
+      UI.toast('已生成 ' + done + ' 份简历');
+      setTimeout(() => m.close(), 600);
+    };
   }
 
   function contactLine(d) {
