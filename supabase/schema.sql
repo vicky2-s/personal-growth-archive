@@ -58,6 +58,9 @@ create table if not exists public.projects (
   constraint projects_status_check check (status in ('进行中','已完成','暂停'))
 );
 
+-- 幂等补丁：老版本表可能缺 outcomes 字段
+alter table public.projects add column if not exists outcomes text[] not null default '{}';
+
 -- =====================================================================
 -- 3. 个人反思表 reflections
 --    一个项目可以有多条反思，记录"学到了什么 / 困难 / 改进"。
@@ -227,6 +230,9 @@ create table if not exists public.diary_entries (
   constraint diary_entries_unique unique (user_id, entry_date)
 );
 
+-- 幂等补丁：老版本表可能缺 external_analysis 字段
+alter table public.diary_entries add column if not exists external_analysis text;
+
 -- =====================================================================
 -- 索引（提升查询性能）
 -- =====================================================================
@@ -302,6 +308,20 @@ alter table public.achievements     enable row level security;
 alter table public.user_achievements enable row level security;
 alter table public.ai_analysis      enable row level security;
 alter table public.diary_entries    enable row level security;
+
+-- 先删除可能已存在的同名策略（保证可重复执行）
+drop policy if exists users_self       on public.users;
+drop policy if exists projects_self    on public.projects;
+drop policy if exists reflections_self on public.reflections;
+drop policy if exists roles_self       on public.project_roles;
+drop policy if exists contrib_self     on public.contributions;
+drop policy if exists files_self       on public.files;
+drop policy if exists skills_read      on public.skills;
+drop policy if exists evidence_self    on public.skill_evidence;
+drop policy if exists achievements_read on public.achievements;
+drop policy if exists ua_self          on public.user_achievements;
+drop policy if exists ai_self          on public.ai_analysis;
+drop policy if exists diary_self       on public.diary_entries;
 
 -- users：仅本人可读写
 create policy "users_self" on public.users
@@ -396,6 +416,10 @@ $$;
 -- =====================================================================
 -- 种子数据：六大能力领域 × 5 项能力
 -- =====================================================================
+-- 幂等保证：确保 name 有唯一索引（老版本表可能缺失），on conflict 才能生效
+create unique index if not exists skills_name_key       on public.skills (name);
+create unique index if not exists achievements_name_key on public.achievements (name);
+
 insert into public.skills (name, category, icon, sort_order) values
   -- A 思考与学习
   ('信息检索',    '思考与学习', '🧠', 1),
