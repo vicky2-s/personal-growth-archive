@@ -390,6 +390,31 @@ h2 { font-size: 16px; font-weight: 650; }
 .diary-history-item { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
 .diary-history-summary { flex: 1; color: var(--text-muted); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+.diary-external-wrap { margin-top: 12px; font-size: 13px; color: var(--text-muted); }
+.diary-external-wrap summary { cursor: pointer; }
+#diary-external { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; resize: vertical; font-size: 14px; margin-top: 8px; background: var(--bg-card); }
+#diary-external:focus { outline: none; border-color: var(--accent); }
+
+.diary-review-bar { display: flex; align-items: center; gap: 8px; }
+.diary-review-bar select { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; background: var(--bg-card); }
+.diary-review { margin-top: 12px; }
+
+.ai-view { background: var(--accent-soft); border-radius: var(--radius-sm); padding: 11px 13px; }
+.ai-view b { color: var(--accent-strong); }
+.ai-blind { background: #f3edd8; border-radius: var(--radius-sm); padding: 11px 13px; }
+
+/* =====================================================================
+ * 档案库容量
+ * ===================================================================== */
+.storage-card { padding: 18px 20px; }
+.storage-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.storage-num { font-size: 20px; font-weight: 700; }
+.storage-pct { font-size: 16px; font-weight: 700; color: var(--accent-strong); }
+.storage-pct.warn { color: var(--danger); }
+.storage-bar { margin: 12px 0 10px; }
+.storage-warning { color: var(--danger); font-size: 13px; background: var(--danger-soft); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 10px; }
+.storage-meta { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-muted); font-size: 13px; }
+
 /* =====================================================================
  * 模态弹窗
  * ===================================================================== */

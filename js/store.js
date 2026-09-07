@@ -461,6 +461,29 @@ window.Store = (function () {
     };
   }
 
+  // 档案库容量统计（文件体积 + 分类）
+  function storageStats() {
+    const quota = window.STORAGE_QUOTA_BYTES || 1073741824;
+    const largeTh = window.LARGE_FILE_BYTES || 20971520;
+    let usedBytes = 0, core = 0, regular = 0, large = 0;
+    cache.files.forEach(f => {
+      const size = f.file_size || 0;
+      usedBytes += size;
+      if (size >= largeTh) large++;
+      if (f.importance === '重要' || f.importance === '非常重要') core++;
+      else regular++;
+    });
+    return {
+      usedBytes,
+      quotaBytes: quota,
+      percent: quota ? Math.min(100, (usedBytes / quota) * 100) : 0,
+      totalFiles: cache.files.length,
+      coreFiles: core,
+      regularFiles: regular,
+      largeFiles: large,
+    };
+  }
+
   function recentActivity(n) {
     const items = [];
     cache.projects.forEach(p => items.push({ type: 'project', icon: '📁', title: p.name, time: p.created_at, id: p.id }));
@@ -569,7 +592,7 @@ window.Store = (function () {
     projects, roles, contributions, reflections,
     files, evidence, skillsView, achievements, timeline,
     ai, diary,
-    search, stats, recentActivity,
+    search, stats, storageStats, recentActivity,
     // 供调试 / 重置演示数据
     _resetDemo: function () { localStorage.removeItem(LS_KEY); loadDemo(); },
   };

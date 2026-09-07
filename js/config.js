@@ -20,6 +20,10 @@ window.CATEGORIES = [
   { key: '自我发展', icon: '🌱' },
 ];
 
+// 档案库容量相关（默认 1 GB 配额，20 MB 以上算"大型文件"）
+window.STORAGE_QUOTA_BYTES = 1 * 1024 * 1024 * 1024;   // 1 GB
+window.LARGE_FILE_BYTES = 20 * 1024 * 1024;            // 20 MB
+
 // 项目类型 / 状态 / 文件重要程度（与数据库 CHECK 约束一致）
 window.PROJECT_TYPES = ['比赛', '项目', '工作', '学习', '活动', '其他'];
 window.PROJECT_STATUS = ['进行中', '已完成', '暂停'];
@@ -99,6 +103,14 @@ window.utils = {
   fileIcon: function (name) {
     const e = window.utils.ext(name);
     return window.FILE_ICONS[e] || '📎';
+  },
+  // 字节数格式化（如 342 MB）
+  fmtBytes: function (n) {
+    if (n == null || isNaN(n)) return '0 B';
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+    return (n / 1073741824).toFixed(2) + ' GB';
   },
   // 读取标签数组（兼容字符串）
   tags: function (t) {

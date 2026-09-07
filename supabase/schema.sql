@@ -219,7 +219,8 @@ create table if not exists public.diary_entries (
   user_id     uuid not null references public.users(id) on delete cascade,
   entry_date  date not null,               -- 日记日期
   content     text,                        -- 日记正文
-  analysis    jsonb,                       -- AI 分析结果（summary/ocean/strengths/improved/...）
+  external_analysis text,                  -- 外部 AI 分析（如 ChatGPT 的分析，供参考）
+  analysis    jsonb,                       -- 本站 AI 独立分析结果
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),
 

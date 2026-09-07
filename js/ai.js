@@ -158,15 +158,17 @@ window.AI = (function () {
   const OCEAN_TRAITS = ['开放性', '尽责性', '外向性', '宜人性', '情绪稳定性'];
   const VIA_STRENGTHS = '创造力、好奇心、判断力、好学、洞察力、勇敢、毅力、真诚、热情、爱、善良、社交智慧、团队合作、公平、领导力、宽恕、谦逊、审慎、自我调节、欣赏美、感恩、希望、幽默、灵性';
 
-  function buildDiaryMessages(content, date) {
-    const system = '你是「人生档案馆」的成长教练与心理分析助手。请基于心理学科学框架分析用户的日记，帮助 ta 看见成长与人格特点。\n'
+  function buildDiaryMessages(content, date, externalAnalysis) {
+    const system = '你是「人生档案馆」的成长教练与心理分析助手。请基于心理学科学框架独立分析用户的日记，帮助 ta 看见成长与人格特点。\n'
       + '科学依据：\n'
       + '1. 大五人格（Big Five / OCEAN）：开放性、尽责性、外向性、宜人性、情绪稳定性。\n'
       + '2. 品格优势（VIA，Peterson & Seligman）：24 项归入 6 大美德。候选优势为：' + VIA_STRENGTHS + '。\n'
       + '3. 成长型思维（Carol Dweck）与反思性实践（Donald Schön）：关注可改进的行为与反思循环。\n\n'
-      + '原则：\n'
+      + '重要原则：\n'
+      + '- 用户可能附上其他 AI（如 ChatGPT）的分析，仅作参考。你要独立分析，可以借鉴但绝不能盲从；可以有不同看法，不必顺着用户或 ChatGPT 的说法。\n'
+      + '- 你唯一的目的是帮助用户变得更好，因此可以温和地指出被忽略的盲点。\n'
       + '- 只依据日记文本中的真实证据推断，证据不足时 level 用"待观察"。\n'
-      + '- 语气温和、建设性，聚焦成长，不做负面评判、不下临床诊断。\n\n'
+      + '- 语气温和、建设性，不做负面评判、不下临床诊断。\n\n'
       + '输出 JSON（只输出 JSON，不要其他文字）：\n'
       + '{"summary":"今天一句话总结",'
       + '"ocean":[{"trait":"开放性","level":"高|中|低|待观察","evidence":"简短依据"}，共5项：' + OCEAN_TRAITS.join('、') + '],'
@@ -174,20 +176,57 @@ window.AI = (function () {
       + '"improved":"今天主要在哪个方面有提升（一句话）",'
       + '"improved_domain":"思考与学习|表达与沟通|创意与内容|项目与职业|数字与技术|自我发展|无",'
       + '"strengthen":"未来建议加强的方面（一句话）",'
-      + '"advice":"一条具体可执行的建议"}';
-    const user = '日期：' + (date || '') + '\n\n日记内容：\n' + content;
+      + '"advice":"一条具体可执行的建议",'
+      + '"independent_view":"你独立的、可能不同于用户自述或外部AI分析的观察",'
+      + '"blind_spot":"用户可能忽略的一个点（没有则为空字符串）"}';
+    let user = '日期：' + (date || '') + '\n\n日记内容：\n' + content;
+    if (externalAnalysis && externalAnalysis.trim()) {
+      user += '\n\n（用户附上的其他 AI 分析，仅供参考，请独立判断）\n' + externalAnalysis.trim();
+    }
     return [
       { role: 'system', content: system },
       { role: 'user', content: user },
     ];
   }
 
-  async function analyzeDiary(content, onProgress) {
+  async function analyzeDiary(content, externalAnalysis, onProgress) {
     const cfg = config.get();
     if (!cfg.apiKey) throw new Error('请先在「设置 → AI 分析」里填写 API Key');
     if (!content || !content.trim()) throw new Error('请先写一些日记内容');
-    if (onProgress) onProgress('AI 正在分析日记…');
-    return chat(cfg, buildDiaryMessages(content.trim().slice(0, 8000), utils().today()), 0.3);
+    if (onProgress) onProgress('AI 正在独立分析…');
+    return chat(cfg, buildDiaryMessages(content.trim().slice(0, 8000), utils().today(), externalAnalysis), 0.3);
+  }
+
+  // 跨日记回顾（每周/每月）
+  function buildReviewMessages(entries, periodLabel) {
+    const system = '你是「人生档案馆」的成长教练。用户会提供一段时间内的多篇日记摘要，请做一份成长回顾。\n'
+      + '参考框架：大五人格、VIA 品格优势、成长型思维、反思性实践。\n'
+      + '原则：独立分析，客观温和，聚焦成长，指出趋势与可改进方向。\n\n'
+      + '输出 JSON（只输出 JSON）：\n'
+      + '{"overview":"这段时间整体回顾（一段话）",'
+      + '"growth":["成长点1","成长点2"],'
+      + '"patterns":["反复出现的主题或模式"],'
+      + '"strengths":["体现的品格优势"],'
+      + '"focus":"接下来应重点加强的方向",'
+      + '"trend":"人格/能力/情绪的变化趋势（一段话）"}';
+    const lines = entries.map(e => {
+      const a = e.analysis || {};
+      const excerpt = (e.content || '').replace(/\s+/g, ' ').slice(0, 160);
+      return '- ' + (e.date || '') + ' 总结：' + (a.summary || '') + ' 内容摘录：' + excerpt;
+    }).join('\n');
+    const user = '回顾周期：' + (periodLabel || '') + '\n\n' + lines;
+    return [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ];
+  }
+
+  async function reviewDiary(entries, periodLabel, onProgress) {
+    const cfg = config.get();
+    if (!cfg.apiKey) throw new Error('请先在「设置 → AI 分析」里填写 API Key');
+    if (!entries || !entries.length) throw new Error('该时间段没有日记');
+    if (onProgress) onProgress('AI 正在生成回顾…');
+    return chat(cfg, buildReviewMessages(entries.slice(0, 60), periodLabel), 0.4);
   }
 
   // 把 LLM 返回的能力名称匹配到技能库
@@ -336,5 +375,5 @@ window.AI = (function () {
     }
   }
 
-  return { config, analyzeFile, analyzeAndShow, analyzeDiary, showResultModal, test };
+  return { config, analyzeFile, analyzeAndShow, analyzeDiary, reviewDiary, showResultModal, test };
 })();

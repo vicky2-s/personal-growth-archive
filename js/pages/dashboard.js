@@ -27,6 +27,14 @@ window.Router.register('/', {
 
       <section class="section">
         <div class="section-head">
+          <h2>档案库容量</h2>
+          <a href="#/archive" class="link">管理文件</a>
+        </div>
+        ${storageCard()}
+      </section>
+
+      <section class="section">
+        <div class="section-head">
           <h2>当前进行中的项目</h2>
           <a href="#/projects" class="link">查看全部</a>
         </div>
@@ -88,6 +96,26 @@ window.Router.register('/', {
 
 function statCard(icon, num, label) {
   return `<div class="stat-card"><div class="stat-icon">${icon}</div><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function storageCard() {
+  const st = window.Store.storageStats();
+  const pct = Math.round(st.percent);
+  const warn = st.percent >= 80;
+  return `
+    <div class="card storage-card">
+      <div class="storage-head">
+        <div class="storage-num">${window.utils.fmtBytes(st.usedBytes)} / ${window.utils.fmtBytes(st.quotaBytes)}</div>
+        <div class="storage-pct ${warn ? 'warn' : ''}">${pct}%</div>
+      </div>
+      <div class="storage-bar">${window.UI.bar(st.percent / 100, { color: warn ? 'var(--danger)' : 'var(--accent)' })}</div>
+      ${warn ? '<div class="storage-warning">⚠️ 档案库即将接近存储上限，建议清理大型文件。</div>' : ''}
+      <div class="storage-meta">
+        <span>核心文件：${st.coreFiles}</span>
+        <span>普通档案：${st.regularFiles}</span>
+        <span>大型文件：${st.largeFiles}</span>
+      </div>
+    </div>`;
 }
 
 function typeLabel(type) {
