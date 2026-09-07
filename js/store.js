@@ -15,7 +15,7 @@ window.Store = (function () {
     user: null,
     projects: [], roles: [], contributions: [], files: [],
     evidence: [], reflections: [], skills: [], achievements: [], userAchievements: [],
-    aiAnalysis: [],
+    aiAnalysis: [], diary: [],
   };
 
   let mode = 'demo';
@@ -43,6 +43,7 @@ window.Store = (function () {
       cache.reflections = JSON.parse(JSON.stringify(s.reflections));
       cache.userAchievements = JSON.parse(JSON.stringify(s.userAchievements));
       cache.aiAnalysis = s.aiAnalysis ? JSON.parse(JSON.stringify(s.aiAnalysis)) : [];
+      cache.diary = s.diary ? JSON.parse(JSON.stringify(s.diary)) : [];
       saveDemo();
     }
   }
@@ -71,6 +72,7 @@ window.Store = (function () {
       ['achievements', 'achievements'],
       ['userAchievements', 'user_achievements'],
       ['aiAnalysis', 'ai_analysis'],
+      ['diary', 'diary_entries'],
     ];
     for (const [k, t] of tables) {
       const { data, error } = await c.from(t).select('*');
@@ -493,6 +495,68 @@ window.Store = (function () {
   };
 
   // =====================================================================
+  // 每日日记
+  // =====================================================================
+  const diary = {
+    list: () => cache.diary.slice().sort((a, b) => (b.entry_date || '').localeCompare(a.entry_date || '')),
+    getByDate: d => cache.diary.find(x => x.entry_date === d),
+    // 保存（按日期 upsert）
+    save: async function (data) {
+      // data: { entry_date, content, analysis }
+      const existing = cache.diary.find(x => x.entry_date === data.entry_date);
+      if (isDemo()) {
+        if (existing) { Object.assign(existing, data, { updated_at: now() }); }
+        else { cache.diary.unshift(Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now(), updated_at: now() }, data)); }
+        saveDemo();
+        return existing || cache.diary[0];
+      }
+      if (existing) {
+        const { data: d, error } = await client.from('diary_entries').update(data).eq('id', existing.id).select().single();
+        if (error) throw error;
+        Object.assign(existing, d);
+        return existing;
+      }
+      const { data: d, error } = await client.from('diary_entries').insert(Object.assign({}, data, { user_id: cache.user.id })).select().single();
+      if (error) throw error;
+      cache.diary.unshift(d);
+      return d;
+    },
+    remove: async function (id) {
+      if (isDemo()) { cache.diary = cache.diary.filter(x => x.id !== id); saveDemo(); return; }
+      const { error } = await client.from('diary_entries').delete().eq('id', id);
+      if (error) throw error;
+      cache.diary = cache.diary.filter(x => x.id !== id);
+    },
+    // 性格画像：聚合所有已分析日记
+    profile: function () {
+      const ocean = ['开放性', '尽责性', '外向性', '宜人性', '情绪稳定性'].map(trait => {
+        const levels = {};
+        cache.diary.forEach(d => {
+          const a = d.analysis;
+          if (!a || !Array.isArray(a.ocean)) return;
+          const item = a.ocean.find(o => o.trait === trait);
+          if (item && item.level && item.level !== '待观察') {
+            levels[item.level] = (levels[item.level] || 0) + 1;
+          }
+        });
+        let dominant = null, max = 0;
+        Object.keys(levels).forEach(k => { if (levels[k] > max) { max = levels[k]; dominant = k; } });
+        return { trait, levels, dominant, count: Object.values(levels).reduce((s, v) => s + v, 0) };
+      });
+      const strengths = {};
+      cache.diary.forEach(d => {
+        const a = d.analysis;
+        if (a && Array.isArray(a.strengths)) {
+          a.strengths.forEach(s => { strengths[s] = (strengths[s] || 0) + 1; });
+        }
+      });
+      const strengthsList = Object.keys(strengths).map(k => ({ name: k, count: strengths[k] })).sort((a, b) => b.count - a.count);
+      const analyzedCount = cache.diary.filter(d => d.analysis).length;
+      return { ocean, strengths: strengthsList, analyzedCount, total: cache.diary.length };
+    },
+  };
+
+  // =====================================================================
   // 导出
   // =====================================================================
   return {
@@ -504,7 +568,7 @@ window.Store = (function () {
     effectiveCount,
     projects, roles, contributions, reflections,
     files, evidence, skillsView, achievements, timeline,
-    ai,
+    ai, diary,
     search, stats, recentActivity,
     // 供调试 / 重置演示数据
     _resetDemo: function () { localStorage.removeItem(LS_KEY); loadDemo(); },

@@ -123,12 +123,13 @@ window.AI = (function () {
     }
   }
 
-  async function callLLM(cfg, text, fileName, skillNames) {
+  // 通用 LLM 调用（OpenAI 兼容 /chat/completions）
+  async function chat(cfg, messages, temperature) {
     const url = cfg.baseUrl.replace(/\/+$/, '') + '/chat/completions';
     const body = {
       model: cfg.model || 'deepseek-chat',
-      messages: buildPrompt(text, fileName, skillNames),
-      temperature: 0.2,
+      messages: messages,
+      temperature: temperature == null ? 0.2 : temperature,
       response_format: { type: 'json_object' },
     };
     const doFetch = (withFormat) => {
@@ -145,6 +146,48 @@ window.AI = (function () {
     const data = await res.json();
     const content = data.choices && data.choices[0] && data.choices[0].message.content;
     return parseJSON(content);
+  }
+
+  async function callLLM(cfg, text, fileName, skillNames) {
+    return chat(cfg, buildPrompt(text, fileName, skillNames));
+  }
+
+  // =====================================================================
+  // 日记分析：基于大五人格 + VIA 品格优势 + 成长型思维
+  // =====================================================================
+  const OCEAN_TRAITS = ['开放性', '尽责性', '外向性', '宜人性', '情绪稳定性'];
+  const VIA_STRENGTHS = '创造力、好奇心、判断力、好学、洞察力、勇敢、毅力、真诚、热情、爱、善良、社交智慧、团队合作、公平、领导力、宽恕、谦逊、审慎、自我调节、欣赏美、感恩、希望、幽默、灵性';
+
+  function buildDiaryMessages(content, date) {
+    const system = '你是「人生档案馆」的成长教练与心理分析助手。请基于心理学科学框架分析用户的日记，帮助 ta 看见成长与人格特点。\n'
+      + '科学依据：\n'
+      + '1. 大五人格（Big Five / OCEAN）：开放性、尽责性、外向性、宜人性、情绪稳定性。\n'
+      + '2. 品格优势（VIA，Peterson & Seligman）：24 项归入 6 大美德。候选优势为：' + VIA_STRENGTHS + '。\n'
+      + '3. 成长型思维（Carol Dweck）与反思性实践（Donald Schön）：关注可改进的行为与反思循环。\n\n'
+      + '原则：\n'
+      + '- 只依据日记文本中的真实证据推断，证据不足时 level 用"待观察"。\n'
+      + '- 语气温和、建设性，聚焦成长，不做负面评判、不下临床诊断。\n\n'
+      + '输出 JSON（只输出 JSON，不要其他文字）：\n'
+      + '{"summary":"今天一句话总结",'
+      + '"ocean":[{"trait":"开放性","level":"高|中|低|待观察","evidence":"简短依据"}，共5项：' + OCEAN_TRAITS.join('、') + '],'
+      + '"strengths":["从VIA中选1-3个"],'
+      + '"improved":"今天主要在哪个方面有提升（一句话）",'
+      + '"improved_domain":"思考与学习|表达与沟通|创意与内容|项目与职业|数字与技术|自我发展|无",'
+      + '"strengthen":"未来建议加强的方面（一句话）",'
+      + '"advice":"一条具体可执行的建议"}';
+    const user = '日期：' + (date || '') + '\n\n日记内容：\n' + content;
+    return [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ];
+  }
+
+  async function analyzeDiary(content, onProgress) {
+    const cfg = config.get();
+    if (!cfg.apiKey) throw new Error('请先在「设置 → AI 分析」里填写 API Key');
+    if (!content || !content.trim()) throw new Error('请先写一些日记内容');
+    if (onProgress) onProgress('AI 正在分析日记…');
+    return chat(cfg, buildDiaryMessages(content.trim().slice(0, 8000), utils().today()), 0.3);
   }
 
   // 把 LLM 返回的能力名称匹配到技能库
@@ -293,5 +336,5 @@ window.AI = (function () {
     }
   }
 
-  return { config, analyzeFile, analyzeAndShow, showResultModal, test };
+  return { config, analyzeFile, analyzeAndShow, analyzeDiary, showResultModal, test };
 })();

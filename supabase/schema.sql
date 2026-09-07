@@ -210,6 +210,23 @@ create table if not exists public.ai_analysis (
 );
 
 -- =====================================================================
+-- 12. 每日日记表 diary_entries
+--     每天一篇日记，可选 AI 分析（大五人格 / VIA 品格优势 / 成长建议）。
+--     analysis 为 jsonb，存储结构化分析结果。
+-- =====================================================================
+create table if not exists public.diary_entries (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.users(id) on delete cascade,
+  entry_date  date not null,               -- 日记日期
+  content     text,                        -- 日记正文
+  analysis    jsonb,                       -- AI 分析结果（summary/ocean/strengths/improved/...）
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+
+  constraint diary_entries_unique unique (user_id, entry_date)
+);
+
+-- =====================================================================
 -- 索引（提升查询性能）
 -- =====================================================================
 create index if not exists idx_projects_user      on public.projects(user_id);
@@ -222,6 +239,7 @@ create index if not exists idx_contrib_project    on public.contributions(projec
 create index if not exists idx_roles_project      on public.project_roles(project_id);
 create index if not exists idx_reflections_project on public.reflections(project_id);
 create index if not exists idx_ua_user            on public.user_achievements(user_id);
+create index if not exists idx_diary_user         on public.diary_entries(user_id);
 
 -- =====================================================================
 -- 触发器：auth 注册后自动创建 public.users 行
@@ -282,6 +300,7 @@ alter table public.skill_evidence   enable row level security;
 alter table public.achievements     enable row level security;
 alter table public.user_achievements enable row level security;
 alter table public.ai_analysis      enable row level security;
+alter table public.diary_entries    enable row level security;
 
 -- users：仅本人可读写
 create policy "users_self" on public.users
@@ -333,6 +352,10 @@ create policy "ua_self" on public.user_achievements
 
 -- ai_analysis：仅本人可读写
 create policy "ai_self" on public.ai_analysis
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- diary_entries：仅本人可读写
+create policy "diary_self" on public.diary_entries
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- =====================================================================

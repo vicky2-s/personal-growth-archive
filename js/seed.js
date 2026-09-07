@@ -146,11 +146,35 @@ window.SEED = (function () {
     { id: 'ua5', achievement_id: 'ach-9', related_project_id: 'p5', unlocked_at: '2026-06-30' },
   ];
 
+  // ---- 日记 ----
+  const diary = [
+    {
+      id: 'd1', entry_date: '2026-09-06',
+      content: '今天第一次给游客做完整讲解，刚开始有点紧张，讲到第三个部分就放开了。结束有游客说讲得很清楚，挺开心的。还是觉得开头那段不够熟，下次再练练。',
+      analysis: {
+        summary: '第一次独立讲解，从紧张到投入，获得正向反馈。',
+        ocean: [
+          { trait: '开放性', level: '中', evidence: '愿意尝试新的讲解任务' },
+          { trait: '尽责性', level: '高', evidence: '提前准备讲解内容并反思不足' },
+          { trait: '外向性', level: '中', evidence: '能面向游客表达，但开始会紧张' },
+          { trait: '宜人性', level: '待观察', evidence: '证据不足' },
+          { trait: '情绪稳定性', level: '中', evidence: '能自我调节紧张情绪' },
+        ],
+        strengths: ['毅力', '好奇'],
+        improved: '公众表达',
+        improved_domain: '表达与沟通',
+        strengthen: '开头部分的口头表达熟练度',
+        advice: '把开场白单独拆出来，每天对着镜子练 3 遍。',
+      },
+      created_at: '2026-09-06', updated_at: '2026-09-06',
+    },
+  ];
+
   // 初始数据快照（用于重置）
   const initial = {
     user: demoUser,
     skills, achievements, projects, roles, contributions, files,
-    evidence, reflections, userAchievements,
+    evidence, reflections, userAchievements, diary,
   };
 
   return { initial: initial, user: demoUser };

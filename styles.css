@@ -368,6 +368,29 @@ h2 { font-size: 16px; font-weight: 650; }
 .ai-skill-opt input { accent-color: var(--accent); }
 
 /* =====================================================================
+ * 每日日记
+ * ===================================================================== */
+.diary-date-bar { display: flex; align-items: center; gap: 8px; }
+.diary-date-bar input { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 11px; background: var(--bg-card); }
+.diary-actions { display: flex; gap: 8px; margin-top: 14px; }
+#diary-content { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; resize: vertical; font-size: 14.5px; line-height: 1.8; background: var(--bg-card); }
+#diary-content:focus { outline: none; border-color: var(--accent); }
+
+.diary-analysis { margin-top: 16px; }
+.ocean-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 12px 0; }
+.ocean-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 13px; background: var(--bg); }
+.ocean-trait { font-weight: 650; font-size: 14px; margin-bottom: 4px; }
+.ocean-level { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 20px; }
+.ocean-evidence { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+.lvl-high { background: var(--accent-soft); color: var(--accent-strong); }
+.lvl-mid { background: #f3edd8; color: #9a7b2a; }
+.lvl-low { background: #e8e9f2; color: #4a4d7c; }
+.lvl-na { background: var(--bg-soft); color: var(--text-muted); }
+
+.diary-history-item { display: flex; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--border); }
+.diary-history-summary { flex: 1; color: var(--text-muted); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* =====================================================================
  * 模态弹窗
  * ===================================================================== */
 #modal-root { position: fixed; inset: 0; z-index: 100; pointer-events: none; }
