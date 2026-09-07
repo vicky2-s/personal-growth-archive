@@ -7,6 +7,12 @@
 -- 然后在 SQL Editor 执行本文件，配置访问策略。
 -- =====================================================================
 
+-- 先删除可能已存在的同名策略（保证可重复执行）
+drop policy if exists "files_upload_own" on storage.objects;
+drop policy if exists "files_read_own"   on storage.objects;
+drop policy if exists "files_update_own" on storage.objects;
+drop policy if exists "files_delete_own" on storage.objects;
+
 -- 策略 1：用户只能上传到自己的目录 "用户ID/文件名"
 create policy "files_upload_own"
   on storage.objects
