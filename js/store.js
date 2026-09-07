@@ -20,6 +20,7 @@ window.Store = (function () {
 
   let mode = 'demo';
   const client = window.SB.client;
+  const achievementListeners = [];
 
   const isDemo = () => mode === 'demo';
   const now = () => new Date().toISOString();
@@ -86,10 +87,11 @@ window.Store = (function () {
   async function init() {
     if (window.SB.configured) {
       const user = await window.SB.restoreSession();
-      if (user) { mode = 'live'; await loadLive(); return; }
+      if (user) { mode = 'live'; await loadLive(); await unlockAchievements(); return; }
     }
     mode = 'demo';
     loadDemo();
+    await unlockAchievements();
   }
 
   // ---------- 登录 / 退出 ----------
@@ -164,11 +166,11 @@ window.Store = (function () {
       const defaults = { description: '', project_type: '其他', status: '进行中', start_date: null, end_date: null, tags: [], outcomes: [], reflection: '' };
       if (isDemo()) {
         const p = Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now(), updated_at: now() }, defaults, data);
-        cache.projects.unshift(p); saveDemo(); return p;
+        cache.projects.unshift(p); saveDemo(); unlockAchievements(); return p;
       }
       const { data: d, error } = await client.from('projects').insert(Object.assign({}, defaults, data, { user_id: cache.user.id })).select().single();
       if (error) throw error;
-      cache.projects.unshift(d); return d;
+      cache.projects.unshift(d); unlockAchievements(); return d;
     },
     update: async function (id, data) {
       if (isDemo()) {
@@ -219,10 +221,10 @@ window.Store = (function () {
     list: pid => cache.contributions.filter(c => c.project_id === pid),
     add: async function (pid, description) {
       if (isDemo()) {
-        const c = { id: utils.uid(), project_id: pid, description }; cache.contributions.push(c); saveDemo(); return c;
+        const c = { id: utils.uid(), project_id: pid, description }; cache.contributions.push(c); saveDemo(); unlockAchievements(); return c;
       }
       const { data: d, error } = await client.from('contributions').insert({ project_id: pid, description }).select().single();
-      if (error) throw error; cache.contributions.push(d); return d;
+      if (error) throw error; cache.contributions.push(d); unlockAchievements(); return d;
     },
     remove: async function (id) {
       if (isDemo()) { cache.contributions = cache.contributions.filter(c => c.id !== id); saveDemo(); return; }
@@ -271,7 +273,7 @@ window.Store = (function () {
       const ext = utils.ext(file.name);
       if (isDemo()) {
         const f = { id: utils.uid(), user_id: cache.user.id, project_id: projectId || null, file_name: file.name, file_type: ext, file_url: null, file_size: file.size, description: '', importance: '普通', tags: [], uploaded_at: now() };
-        cache.files.unshift(f); saveDemo(); return f;
+        cache.files.unshift(f); saveDemo(); unlockAchievements(); return f;
       }
       const path = cache.user.id + '/' + utils.uid() + (ext ? '.' + ext : '');
       const { error: upErr } = await client.storage.from('files').upload(path, file);
@@ -279,7 +281,7 @@ window.Store = (function () {
       const meta = { user_id: cache.user.id, project_id: projectId || null, file_name: file.name, file_type: ext, file_url: path, file_size: file.size, description: '', importance: '普通', tags: [], uploaded_at: now() };
       const { data: d, error } = await client.from('files').insert(meta).select().single();
       if (error) throw error;
-      cache.files.unshift(d); return d;
+      cache.files.unshift(d); unlockAchievements(); return d;
     },
     update: async function (id, data) {
       if (isDemo()) {
@@ -339,10 +341,10 @@ window.Store = (function () {
     add: async function (data) {
       const row = Object.assign({ evidence_description: '', evidence_date: utils.today(), ai_suggested: false }, data, { confirmed: true });
       if (isDemo()) {
-        const e = Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now() }, row); cache.evidence.push(e); saveDemo(); return e;
+        const e = Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now() }, row); cache.evidence.push(e); saveDemo(); unlockAchievements(); return e;
       }
       const { data: d, error } = await client.from('skill_evidence').insert(Object.assign({}, row, { user_id: cache.user.id })).select().single();
-      if (error) throw error; cache.evidence.push(d); return d;
+      if (error) throw error; cache.evidence.push(d); unlockAchievements(); return d;
     },
     remove: async function (id) {
       if (isDemo()) { cache.evidence = cache.evidence.filter(e => e.id !== id); saveDemo(); return; }
@@ -408,6 +410,66 @@ window.Store = (function () {
       });
     },
   };
+
+  // =====================================================================
+  // 成就自动解锁
+  // =====================================================================
+  function evaluateRule(ruleStr) {
+    let r;
+    try { r = JSON.parse(ruleStr); } catch (e) { return false; }
+    if (!r || !r.type) return false;
+    const confirmed = cache.evidence.filter(e => e.confirmed !== false);
+    const skillName = id => { const s = skillById(id); return s ? s.name : ''; };
+    switch (r.type) {
+      case 'evidence_skill':
+        return confirmed.some(e => (r.skills || []).includes(skillName(e.skill_id)));
+      case 'project_type':
+        return cache.projects.some(p => (r.types || []).includes(p.project_type));
+      case 'contribution_keyword':
+        return cache.contributions.filter(c => (r.keywords || []).some(k => (c.description || '').includes(k))).length >= (r.count || 1);
+      case 'file_count':
+        return cache.files.length >= (r.count || 1);
+      case 'project_evidence_skill': {
+        const set = new Set();
+        confirmed.forEach(e => { if ((r.skills || []).includes(skillName(e.skill_id)) && e.project_id) set.add(e.project_id); });
+        return set.size >= (r.count || 1);
+      }
+      case 'project_and_evidence':
+        return cache.projects.length >= 1 && confirmed.length >= 1;
+      case 'diary_analyzed':
+        return cache.diary.filter(d => d.analysis).length >= (r.count || 1);
+      case 'diary_count':
+        return cache.diary.length >= (r.count || 1);
+      default:
+        return false;
+    }
+  }
+
+  // 检查并解锁满足条件的新成就；返回本次新解锁的成就列表
+  async function unlockAchievements() {
+    const newly = [];
+    for (const a of cache.achievements) {
+      if (!a.rule) continue;
+      if (cache.userAchievements.some(u => u.achievement_id === a.id)) continue;
+      if (!evaluateRule(a.rule)) continue;
+      let ua;
+      if (isDemo()) {
+        ua = { id: utils.uid(), user_id: cache.user.id, achievement_id: a.id, unlocked_at: now() };
+      } else {
+        const { data: d, error } = await client.from('user_achievements')
+          .insert({ user_id: cache.user.id, achievement_id: a.id }).select().single();
+        if (error) { console.error('unlock achievement', error); continue; }
+        ua = d;
+      }
+      cache.userAchievements.push(ua);
+      newly.push(a);
+    }
+    if (isDemo() && newly.length) saveDemo();
+    newly.forEach(a => achievementListeners.forEach(fn => { try { fn(a); } catch (e) { console.error(e); } }));
+    return newly;
+  }
+
+  function onAchievement(fn) { achievementListeners.push(fn); }
 
   // =====================================================================
   // 时间轴
@@ -530,18 +592,18 @@ window.Store = (function () {
       if (isDemo()) {
         if (existing) { Object.assign(existing, data, { updated_at: now() }); }
         else { cache.diary.unshift(Object.assign({ id: utils.uid(), user_id: cache.user.id, created_at: now(), updated_at: now() }, data)); }
-        saveDemo();
+        saveDemo(); unlockAchievements();
         return existing || cache.diary[0];
       }
       if (existing) {
         const { data: d, error } = await client.from('diary_entries').update(data).eq('id', existing.id).select().single();
         if (error) throw error;
-        Object.assign(existing, d);
+        Object.assign(existing, d); unlockAchievements();
         return existing;
       }
       const { data: d, error } = await client.from('diary_entries').insert(Object.assign({}, data, { user_id: cache.user.id })).select().single();
       if (error) throw error;
-      cache.diary.unshift(d);
+      cache.diary.unshift(d); unlockAchievements();
       return d;
     },
     remove: async function (id) {
@@ -592,6 +654,7 @@ window.Store = (function () {
     projects, roles, contributions, reflections,
     files, evidence, skillsView, achievements, timeline,
     ai, diary,
+    onAchievement, unlockAchievements,
     search, stats, storageStats, recentActivity,
     // 供调试 / 重置演示数据
     _resetDemo: function () { localStorage.removeItem(LS_KEY); loadDemo(); },

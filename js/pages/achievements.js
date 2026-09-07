@@ -12,7 +12,7 @@
     render: function () {
       const list = Store.achievements.list();
       const unlocked = list.filter(a => a.unlocked).length;
-      const cats = ['表达', '学习', '数字', '其他'];
+      const cats = ['表达', '学习', '数字', '成长', '其他'];
       return `
         <div class="page-header">
           <div><h1>成就</h1>
@@ -33,7 +33,7 @@
   });
 
   function catLabel(c) {
-    return { '表达': '🎤 表达类', '学习': '📚 学习类', '数字': '💻 数字类', '其他': '其他' }[c] || c;
+    return { '表达': '🎤 表达类', '学习': '📚 学习类', '数字': '💻 数字类', '成长': '🌱 成长类', '其他': '其他' }[c] || c;
   }
 
   function achievementCard(a) {

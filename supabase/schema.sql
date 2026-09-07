@@ -169,11 +169,15 @@ create table if not exists public.achievements (
   id               uuid primary key default gen_random_uuid(),
   name             text not null unique,    -- 成就名称（唯一）
   description      text,                    -- 成就描述
-  category         text not null,           -- 表达 / 学习 / 数字 / ...
+  category         text not null,           -- 表达 / 学习 / 数字 / 成长
   unlock_condition text,                    -- 解锁条件（面向用户的文字说明）
   icon             text,                    -- 成就图标 emoji
+  rule             text,                    -- 自动解锁规则（JSON），如 {"type":"evidence_skill","skills":["公众演讲"]}
   sort_order       int not null default 0
 );
+
+-- 幂等补丁：老版本表可能缺 rule 字段
+alter table public.achievements add column if not exists rule text;
 
 -- =====================================================================
 -- 10. 用户成就表 user_achievements
@@ -462,20 +466,29 @@ on conflict (name) do nothing;
 -- =====================================================================
 -- 种子数据：成就定义
 -- =====================================================================
-insert into public.achievements (name, description, category, unlock_condition, icon, sort_order) values
-  ('第一次登台',      '完成第一次正式公开表达。',           '表达', '首次产生"公众演讲/口头表达"类能力证据', '🎤', 1),
-  ('舞台成长',        '参加正式比赛或展示活动。',           '表达', '完成一个"比赛"类型的项目',               '🎤', 2),
-  ('故事讲述者',      '独立完成 10 篇讲解稿。',             '表达', '累计完成 10 篇讲解/文案类贡献',           '🎤', 3),
-  ('百场讲解员',      '累计完成 100 次讲解。',             '表达', '累计完成 100 次讲解类行为',               '🎤', 4),
+insert into public.achievements (name, description, category, unlock_condition, icon, rule, sort_order) values
+  ('第一次登台',      '完成第一次正式公开表达。',           '表达', '产生「口头表达/公众演讲」类能力证据', '🎤', '{"type":"evidence_skill","skills":["口头表达","公众演讲"]}', 1),
+  ('舞台成长',        '参加正式比赛或展示活动。',           '表达', '完成一个「比赛」类型的项目',           '🎤', '{"type":"project_type","types":["比赛"]}', 2),
+  ('故事讲述者',      '独立完成 10 篇讲解稿。',             '表达', '累计 10 篇讲解/文案类贡献',            '🎤', '{"type":"contribution_keyword","keywords":["讲解稿","讲稿","讲解词","文案"],"count":10}', 3),
+  ('百场讲解员',      '累计完成 100 次讲解。',             '表达', '累计 100 次讲解类行为',               '🎤', '{"type":"contribution_keyword","keywords":["讲解"],"count":100}', 4),
 
-  ('第一次研究',      '完成第一次系统资料研究。',           '学习', '首次产生"信息检索/研究分析"类能力证据', '📚', 1),
-  ('资料猎人',        '完成大量资料整理。',                 '学习', '归档文件数量达到一定规模',               '📚', 2),
-  ('知识建筑师',      '建立个人知识档案系统。',             '学习', '建立首个项目并完成能力证据关联',         '📚', 3),
+  ('第一次研究',      '完成第一次系统资料研究。',           '学习', '产生「信息检索/研究分析」类能力证据', '📚', '{"type":"evidence_skill","skills":["信息检索","研究分析"]}', 1),
+  ('资料猎人',        '归档大量资料。',                     '学习', '归档文件达到 30 个',                  '📚', '{"type":"file_count","count":30}', 2),
+  ('知识建筑师',      '建立个人知识档案系统。',             '学习', '建立首个项目并关联能力证据',         '📚', '{"type":"project_and_evidence"}', 3),
 
-  ('Hello World',     '完成第一个网页项目。',               '数字', '完成第一个"数字与技术"类项目',           '💻', 1),
-  ('Builder',         '独立完成一个完整网站。',             '数字', '完成一个完整网站/系统项目',              '💻', 2),
-  ('Digital Architect','建立完整个人数字系统。',           '数字', '持续维护个人数字档案系统',               '💻', 3)
-on conflict (name) do nothing;
+  ('Hello World',     '完成第一个网页项目。',               '数字', '完成一个含「编程能力」证据的项目',     '💻', '{"type":"project_evidence_skill","skills":["编程能力"],"count":1}', 1),
+  ('Builder',         '独立完成两个完整数字项目。',         '数字', '累计 2 个含「编程能力」证据的项目',    '💻', '{"type":"project_evidence_skill","skills":["编程能力"],"count":2}', 2),
+  ('Digital Architect','建立完整个人数字系统。',           '数字', '累计 3 个数字技术类项目',              '💻', '{"type":"project_evidence_skill","skills":["编程能力","AI工具使用","数字内容管理"],"count":3}', 3),
+
+  ('第一篇日记分析',  '完成第一次 AI 日记分析。',           '成长', '完成 1 篇 AI 日记分析',               '📔', '{"type":"diary_analyzed","count":1}', 1),
+  ('持续记录者',      '坚持写日记。',                       '成长', '累计 7 篇日记',                        '📔', '{"type":"diary_count","count":7}', 2)
+on conflict (name) do update set
+  description = excluded.description,
+  category = excluded.category,
+  unlock_condition = excluded.unlock_condition,
+  icon = excluded.icon,
+  rule = excluded.rule,
+  sort_order = excluded.sort_order;
 
 -- =====================================================================
 -- 权限授予（重要：Supabase 新建表默认不给角色授权，必须显式 GRANT）

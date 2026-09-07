@@ -60,6 +60,9 @@
   // 启动
   async function start() {
     await Store.init();
+    Store.onAchievement(function (a) {
+      UI.toast('🏆 解锁新成就：' + (a.name || ''));
+    });
     renderTopbar();
     bindSearch();
     window.SB.onAuthChange(renderTopbar);

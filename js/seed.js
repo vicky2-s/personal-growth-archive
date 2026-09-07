@@ -20,19 +20,21 @@ window.SEED = (function () {
     ['自我管理','自我发展','🌱'],['适应能力','自我发展','🌱'],['团队协作','自我发展','🌱'],['领导与影响','自我发展','🌱'],['职业探索','自我发展','🌱'],
   ].map((s, i) => ({ id: 'skill-' + (i + 1), name: s[0], category: s[1], icon: s[2], sort_order: i % 5 + 1 }));
 
-  // ---- 成就定义（与 schema.sql 种子一致，10 项）----
+  // ---- 成就定义（与 schema.sql 种子一致，12 项）----
   const achievements = [
-    ['第一次登台','完成第一次正式公开表达。','表达','🎤'],
-    ['舞台成长','参加正式比赛或展示活动。','表达','🎤'],
-    ['故事讲述者','独立完成 10 篇讲解稿。','表达','🎤'],
-    ['百场讲解员','累计完成 100 次讲解。','表达','🎤'],
-    ['第一次研究','完成第一次系统资料研究。','学习','📚'],
-    ['资料猎人','完成大量资料整理。','学习','📚'],
-    ['知识建筑师','建立个人知识档案系统。','学习','📚'],
-    ['Hello World','完成第一个网页项目。','数字','💻'],
-    ['Builder','独立完成一个完整网站。','数字','💻'],
-    ['Digital Architect','建立完整个人数字系统。','数字','💻'],
-  ].map((a, i) => ({ id: 'ach-' + (i + 1), name: a[0], description: a[1], category: a[2], icon: a[3], unlock_condition: '', sort_order: i % 4 + 1 }));
+    ['第一次登台','完成第一次正式公开表达。','表达','🎤','{"type":"evidence_skill","skills":["口头表达","公众演讲"]}'],
+    ['舞台成长','参加正式比赛或展示活动。','表达','🎤','{"type":"project_type","types":["比赛"]}'],
+    ['故事讲述者','独立完成 10 篇讲解稿。','表达','🎤','{"type":"contribution_keyword","keywords":["讲解稿","讲稿","讲解词","文案"],"count":10}'],
+    ['百场讲解员','累计完成 100 次讲解。','表达','🎤','{"type":"contribution_keyword","keywords":["讲解"],"count":100}'],
+    ['第一次研究','完成第一次系统资料研究。','学习','📚','{"type":"evidence_skill","skills":["信息检索","研究分析"]}'],
+    ['资料猎人','归档大量资料。','学习','📚','{"type":"file_count","count":30}'],
+    ['知识建筑师','建立个人知识档案系统。','学习','📚','{"type":"project_and_evidence"}'],
+    ['Hello World','完成第一个网页项目。','数字','💻','{"type":"project_evidence_skill","skills":["编程能力"],"count":1}'],
+    ['Builder','独立完成两个完整数字项目。','数字','💻','{"type":"project_evidence_skill","skills":["编程能力"],"count":2}'],
+    ['Digital Architect','建立完整个人数字系统。','数字','💻','{"type":"project_evidence_skill","skills":["编程能力","AI工具使用","数字内容管理"],"count":3}'],
+    ['第一篇日记分析','完成第一次 AI 日记分析。','成长','📔','{"type":"diary_analyzed","count":1}'],
+    ['持续记录者','坚持写日记。','成长','📔','{"type":"diary_count","count":7}'],
+  ].map((a, i) => ({ id: 'ach-' + (i + 1), name: a[0], description: a[1], category: a[2], icon: a[3], rule: a[4], unlock_condition: '', sort_order: i % 4 + 1 }));
 
   // ---- 项目 ----
   const projects = [
