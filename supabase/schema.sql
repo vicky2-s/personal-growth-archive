@@ -428,3 +428,18 @@ insert into public.achievements (name, description, category, unlock_condition, 
   ('Builder',         '独立完成一个完整网站。',             '数字', '完成一个完整网站/系统项目',              '💻', 2),
   ('Digital Architect','建立完整个人数字系统。',           '数字', '持续维护个人数字档案系统',               '💻', 3)
 on conflict (name) do nothing;
+
+-- =====================================================================
+-- 权限授予（重要：Supabase 新建表默认不给角色授权，必须显式 GRANT）
+-- RLS 策略控制"行级"访问，这里的 GRANT 控制"表级"访问。
+-- =====================================================================
+grant usage on schema public to anon, authenticated;
+
+grant all on all tables in schema public to anon, authenticated;
+grant all on all sequences in schema public to anon, authenticated;
+grant execute on all functions in schema public to anon, authenticated;
+
+-- 让今后新建的表/序列/函数也自动授权
+alter default privileges in schema public grant all on tables to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+alter default privileges in schema public grant execute on functions to anon, authenticated;

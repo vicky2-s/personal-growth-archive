@@ -5,8 +5,8 @@
 // Supabase 配置：把这里替换成你自己的项目信息（见 docs/04-Supabase配置.md）
 // 留空 supabaseUrl 时，网站自动进入「演示模式」（使用 seed.js 的本地数据）。
 window.APP_CONFIG = {
-  supabaseUrl: 'https://pdtugdlzydpmzafvuunj.supabase.co/rest/v1/',           // 例如 'https://xxxx.supabase.co'
-  supabaseAnonKey: 'sb_publishable_Om9HukJ3JuQWG9qj5kf6cQ_JPUCJIPB',       // anon public key
+  supabaseUrl: 'https://pdtugdlzydpmzafvuunj.supabase.co',           // 例如 'https://xxxx.supabase.co'（不要带 /rest/v1）
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkdHVnZGx6eWRwbXphZnZ1dW5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3MzYxNzIsImV4cCI6MjEwNDMxMjE3Mn0.ck-sA0rasCUAXXtqKTEOfyS487QE0JZ4Ap6UuFnPNfk',       // anon public key
   demoMode: true,            // 未登录 / 未配置时是否启用演示数据
 };
 
