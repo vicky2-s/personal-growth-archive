@@ -16,6 +16,14 @@
   let selectedIds = new Set(); // 选中的项目 id
   let autoFit = true;        // 自动适配一页
 
+  // 西南交大版模板的默认文案（照片与校徽为固定素材 assets/photo.png、assets/school-logo.png）
+  const SWJTU_DEFAULTS = {
+    degree_sub: '法语语言文学·大三在读',
+    education: '西南交通大学·法语语言文学 2023.09–2027.06\n主修课程：综合法语、法语听说、法语文学 | 法语专四已参考，成绩待公布\n英语CET-4 543（口语良好）·CET-6 473（口语合格）',
+    languages: '法语（专四已考，成绩未出）\n英语CET-4 543\n英语CET-6 473',
+    prof_skills: 'Office办公套件\nAI辅助翻译工作流',
+  };
+
   window.Router.register('/resume', {
     title: '导出简历',
     render: function () {
@@ -62,12 +70,12 @@
 
   function newResume() {
     const u = Store.user();
-    editing = {
-      title: '我的简历', template: 'simple',
+    editing = Object.assign({
+      title: '我的简历', template: 'swjtu',
       job_title: u.job_title || '', target_company: '', summary: '',
       phone: u.phone || '', city: u.city || '', email: u.email || '',
       photo_url: '', project_ids: [],
-    };
+    }, SWJTU_DEFAULTS);
     photoData = null;
     selectedIds = new Set();
     renderEditor();
@@ -93,7 +101,7 @@
           <div class="card resume-saved-item">
             <div class="re-saved-info">
               <span class="re-saved-title">📄 ${UI.esc(r.title)}</span>
-              <span class="chip">${r.template === 'columns' ? '两栏版' : '简洁版'}</span>
+              <span class="chip">${templateName(r.template)}</span>
               ${r.job_title ? `<span class="chip">${UI.esc(r.job_title)}</span>` : ''}
               <span class="muted">${utils.timeAgo(r.updated_at)}</span>
             </div>
@@ -117,6 +125,7 @@
           <div class="field-row">
             ${UI.field('简历名称', `<input type="text" id="re-title" value="${UI.esc(editing.title || '')}" />`)}
             ${UI.field('模板', `<select id="re-template">
+              <option value="swjtu" ${editing.template === 'swjtu' ? 'selected' : ''}>西南交大版（校徽侧栏）</option>
               <option value="simple" ${editing.template === 'simple' ? 'selected' : ''}>简洁版（单栏）</option>
               <option value="columns" ${editing.template === 'columns' ? 'selected' : ''}>两栏版（侧栏）</option>
             </select>`)}
@@ -131,6 +140,13 @@
             ${UI.field('邮箱', `<input type="text" id="re-email" value="${UI.esc(editing.email || '')}" />`)}
           </div>
           ${UI.field('自我评价', `<textarea id="re-summary" rows="3">${UI.esc(editing.summary || '')}</textarea>`)}
+          ${editing.template === 'swjtu' ? `
+          ${UI.field('学历·专业（姓名下方副标题）', `<input type="text" id="re-degree" value="${UI.esc(editing.degree_sub || '')}" />`)}
+          ${UI.field('教育背景（每行一条，第一行为校名·专业）', `<textarea id="re-edu" rows="4">${UI.esc(editing.education || '')}</textarea>`)}
+          <div class="field-row">
+            ${UI.field('语言能力（每行一项）', `<textarea id="re-lang" rows="3">${UI.esc(editing.languages || '')}</textarea>`)}
+            ${UI.field('专业技能（每行一项）', `<textarea id="re-profs" rows="3">${UI.esc(editing.prof_skills || '')}</textarea>`)}
+          </div>` : ''}
           <div class="resume-form-actions">
             <button class="btn btn-sm" id="re-ai-summary">🤖 AI 生成自我评价</button>
             <button class="btn btn-sm" id="re-ai-match">🤖 AI 匹配经历</button>
@@ -155,12 +171,27 @@
       editing.phone = document.getElementById('re-phone').value.trim();
       editing.city = document.getElementById('re-city').value.trim();
       editing.email = document.getElementById('re-email').value.trim();
+      const degreeEl = document.getElementById('re-degree');
+      if (degreeEl) editing.degree_sub = degreeEl.value.trim();
+      const eduEl = document.getElementById('re-edu');
+      if (eduEl) editing.education = eduEl.value;
+      const langEl = document.getElementById('re-lang');
+      if (langEl) editing.languages = langEl.value;
+      const profsEl = document.getElementById('re-profs');
+      if (profsEl) editing.prof_skills = profsEl.value;
     };
 
     // 实时预览
-    ['re-title', 're-template', 're-job', 're-target', 're-summary', 're-phone', 're-city', 're-email'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => { collect(); renderPreview(); });
-      document.getElementById(id).addEventListener('change', () => { collect(); renderPreview(); });
+    ['re-title', 're-job', 're-target', 're-summary', 're-phone', 're-city', 're-email', 're-degree', 're-edu', 're-lang', 're-profs'].forEach(id => {
+      const el2 = document.getElementById(id);
+      if (!el2) return;
+      el2.addEventListener('input', () => { collect(); renderPreview(); });
+      el2.addEventListener('change', () => { collect(); renderPreview(); });
+    });
+    document.getElementById('re-template').addEventListener('change', () => {
+      collect();
+      renderEditor();
+      renderPreview();
     });
     el.querySelectorAll('.re-proj-check').forEach(cb => {
       cb.addEventListener('change', () => {
@@ -287,9 +318,12 @@
       job_title: editing.job_title, summary: editing.summary,
       phone: editing.phone, city: editing.city, email: editing.email,
       photo: photoData || editing.photo_url,
+      degree_sub: editing.degree_sub, education: editing.education,
+      languages: editing.languages, prof_skills: editing.prof_skills,
       projects, template: editing.template,
     };
-    el.innerHTML = editing.template === 'columns' ? renderColumns(data) : renderSimple(data);
+    el.innerHTML = editing.template === 'swjtu' ? renderSwjtu(data)
+      : (editing.template === 'columns' ? renderColumns(data) : renderSimple(data));
     fitToPage();
   }
 
@@ -310,7 +344,7 @@
   // 批量生成多份（不同岗位版本）
   function batchGenerate() {
     const u = Store.user();
-    const base = editing ? editing : { template: 'simple', phone: u.phone || '', city: u.city || '', email: u.email || '', photo_url: '' };
+    const base = editing ? editing : Object.assign({ template: 'swjtu', phone: u.phone || '', city: u.city || '', email: u.email || '', photo_url: '' }, SWJTU_DEFAULTS);
     const m = UI.modal({
       title: '批量生成多份简历',
       content: `<p class="hint">每行填一个目标公司/岗位，会为每个生成一份专属简历（AI 匹配经历 + 生成自我评价）。</p>
@@ -337,7 +371,7 @@
           });
           const matched = projects.filter(p => ids.has(p.id));
           const summary = await AI.resumeSummary({ name: u.display_name, job_title: pos, projects: matched.map(p => ({ name: p.name, type: p.type, roles: p.roles, contributions: p.contributions, outcomes: p.outcomes })) });
-          await Store.resumes.save({ title: pos, template: base.template || 'simple', job_title: pos, target_company: pos, summary: (summary || '').trim(), phone: base.phone || '', city: base.city || '', email: base.email || '', photo_url: base.photo_url || '', project_ids: Array.from(ids) });
+          await Store.resumes.save({ title: pos, template: base.template || 'swjtu', job_title: pos, target_company: pos, summary: (summary || '').trim(), phone: base.phone || '', city: base.city || '', email: base.email || '', photo_url: base.photo_url || '', degree_sub: base.degree_sub || '', education: base.education || '', languages: base.languages || '', prof_skills: base.prof_skills || '', project_ids: Array.from(ids) });
           done++;
         } catch (e) {
           prog.textContent = (prog.textContent || '') + '\n⚠️ ' + pos + ' 失败：' + e.message;
@@ -348,6 +382,10 @@
       UI.toast('已生成 ' + done + ' 份简历');
       setTimeout(() => m.close(), 600);
     };
+  }
+
+  function templateName(t) {
+    return t === 'columns' ? '两栏版' : (t === 'swjtu' ? '西南交大版' : '简洁版');
   }
 
   function contactLine(d) {
@@ -418,5 +456,70 @@
     const achs = Store.achievements.list().filter(a => a.unlocked);
     if (!achs.length) return '';
     return `<div class="rc-block"><div class="rc-title">成长成就</div>${achs.slice(0, 6).map(a => `<div class="rc-line">${a.icon} ${UI.esc(a.name)}</div>`).join('')}</div>`;
+  }
+
+  // =====================================================================
+  // 西南交大版模板（校徽侧栏，参照李杨简历 PDF 版式）
+  // =====================================================================
+  function renderSwjtu(d) {
+    const photo = d.photo || 'assets/photo.png';
+    const lines = (s, fallback) => String(s || fallback || '').split('\n').map(x => x.trim()).filter(Boolean);
+    const eduLines = lines(d.education, SWJTU_DEFAULTS.education);
+    const langLines = lines(d.languages, SWJTU_DEFAULTS.languages);
+    const skillLines = lines(d.prof_skills, SWJTU_DEFAULTS.prof_skills);
+    const degSub = d.degree_sub || SWJTU_DEFAULTS.degree_sub;
+    const contact = [['📧', d.email], ['📞', d.phone], ['📍', d.city]].filter(x => x[1]);
+    const intern = d.projects.filter(p => p.type === '工作');
+    const pract = d.projects.filter(p => p.type !== '工作');
+    return `<div class="resume-sheet resume-swjtu">
+      <div class="rj-side">
+        <img class="rj-photo" src="${photo}" />
+        <div class="rj-name">${UI.esc(d.name)}</div>
+        ${degSub ? `<div class="rj-sub">${UI.esc(degSub)}</div>` : ''}
+        ${d.job_title ? `<div class="rj-intent">意向：${UI.esc(d.job_title)}</div>` : ''}
+        <div class="rj-divider"></div>
+        ${contact.length ? `<div class="rj-block"><div class="rj-title">联系方式</div>${contact.map(x => `<div class="rj-item">${x[0]} ${UI.esc(x[1])}</div>`).join('')}</div>` : ''}
+        ${langLines.length ? `<div class="rj-block"><div class="rj-title">语言能力</div>${langLines.map(x => `<div class="rj-item">${hl(x)}</div>`).join('')}</div>` : ''}
+        ${skillLines.length ? `<div class="rj-block"><div class="rj-title">专业技能</div>${skillLines.map(x => `<div class="rj-item">${hl(x)}</div>`).join('')}</div>` : ''}
+      </div>
+      <div class="rj-main">
+        <img class="rj-logo" src="assets/school-logo.png" />
+        ${eduLines.length ? `<div class="rj-sec"><div class="rj-sec-title">教育背景</div>${renderEdu(eduLines)}</div>` : ''}
+        ${intern.length ? `<div class="rj-sec"><div class="rj-sec-title">实习经历</div>${intern.map(rjEntry).join('')}</div>` : ''}
+        ${pract.length ? `<div class="rj-sec"><div class="rj-sec-title">项目&实践经历</div>${pract.map(rjEntry).join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function renderEdu(lines) {
+    return lines.map((l, i) => {
+      if (i === 0) {
+        const m = l.match(/^(.+?)\s+(\d{4}[.]\d{1,2})\s*[–~-]\s*(\d{4}[.]\d{1,2}|至今)$/);
+        if (m) return `<div class="rj-edu-head"><span>${UI.esc(m[1])}</span><span class="rj-date">${m[2]} – ${m[3]}</span></div>`;
+        return `<div class="rj-edu-head">${UI.esc(l)}</div>`;
+      }
+      return `<div class="rj-body">${hl(l)}</div>`;
+    }).join('');
+  }
+
+  function rjEntry(p) {
+    const title = p.name + (p.roles.length ? ' · ' + p.roles.join(' & ') : '');
+    const date = fmtRange(p.start, p.end);
+    const lines = p.contributions.concat(p.outcomes.length ? '成果：' + p.outcomes.join(' · ') : []);
+    return `<div class="rj-exp">
+      <div class="rj-exp-head"><span class="rj-exp-title">${UI.esc(title)}</span>${date ? `<span class="rj-date">${date}</span>` : ''}</div>
+      ${lines.map(x => `<div class="rj-body">${hl(x)}</div>`).join('')}
+    </div>`;
+  }
+
+  function fmtRange(start, end) {
+    if (!start) return '';
+    const f = d => String(d).slice(0, 7).replace('-', '.');
+    return f(start) + (end ? ' – ' + f(end) : ' – 至今');
+  }
+
+  // 高亮数字（参照模板中蓝色加粗的关键数据）
+  function hl(text) {
+    return UI.esc(text).replace(/(?<![A-Za-z0-9.\-])(?:\d{1,3}(?:,\d{3})+|\d+)(?:[.]\d+)?(?:%|\+)?/g, '<b class="rj-num">$&</b>');
   }
 })();

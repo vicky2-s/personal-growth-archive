@@ -660,16 +660,21 @@ window.Store = (function () {
         saveDemo();
         return existing || cache.resumes[0];
       }
-      if (existing) {
-        const { data: d, error } = await client.from('resumes').update(data).eq('id', existing.id).select().single();
-        if (error) throw error;
-        Object.assign(existing, d);
-        return existing;
+      const upsert = p => existing
+        ? client.from('resumes').update(p).eq('id', existing.id).select().single()
+        : client.from('resumes').insert(p).select().single();
+      const payload = Object.assign({}, data, { user_id: cache.user.id });
+      let res = await upsert(payload);
+      if (res.error) {
+        // 旧版数据库缺少西南交大版模板扩展字段时，降级保存（丢弃扩展字段）
+        const stripped = Object.assign({}, payload);
+        ['degree_sub', 'education', 'languages', 'prof_skills'].forEach(k => delete stripped[k]);
+        res = await upsert(stripped);
       }
-      const { data: d, error } = await client.from('resumes').insert(Object.assign({}, data, { user_id: cache.user.id })).select().single();
-      if (error) throw error;
-      cache.resumes.unshift(d);
-      return d;
+      if (res.error) throw res.error;
+      if (existing) { Object.assign(existing, res.data); return existing; }
+      cache.resumes.unshift(res.data);
+      return res.data;
     },
     remove: async function (id) {
       if (isDemo()) { cache.resumes = cache.resumes.filter(r => r.id !== id); saveDemo(); return; }

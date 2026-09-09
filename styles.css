@@ -484,6 +484,37 @@ h2 { font-size: 16px; font-weight: 650; }
 .rc-line { font-size: 12.5px; color: #444; margin: 3px 0; word-break: break-all; }
 .rc-skill { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
 
+/* 西南交大版模板（校徽侧栏） */
+.resume-swjtu { display: flex; padding: 0; overflow: hidden; min-height: 1123px; }
+.rj-side {
+  width: 24.5%; background: #1a3650; color: #e2e8f0;
+  padding: 26px 18px 22px; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.rj-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255, 255, 255, .5); margin-bottom: 12px; }
+.rj-name { color: #fff; font-size: 24px; font-weight: 700; letter-spacing: 2px; }
+.rj-sub { color: #bed7f2; font-size: 12px; margin-top: 4px; }
+.rj-intent { color: #90cdf4; font-size: 12px; margin-top: 8px; }
+.rj-divider { width: 100%; border-top: 1px solid #4a7aaf; margin: 14px 0; }
+.rj-block { width: 100%; text-align: left; margin-bottom: 16px; }
+.rj-title { color: #90cdf4; font-size: 12.5px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+.rj-item { font-size: 12px; color: #e2e8f0; margin: 4px 0; line-height: 1.55; word-break: break-all; }
+.rj-item b { color: #fff; font-weight: 600; }
+.rj-main { flex: 1; padding: 28px 28px 22px 20px; position: relative; min-width: 0; }
+.rj-logo { position: absolute; top: 26px; right: 26px; height: 32px; }
+.rj-sec { margin-bottom: 16px; }
+.rj-sec-title {
+  color: #4f81bd; font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  border-bottom: 1px solid #cbd5e0; padding-bottom: 4px; margin-bottom: 10px;
+}
+.rj-edu-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; font-weight: 700; color: #2d3748; margin-bottom: 6px; }
+.rj-exp { margin-bottom: 12px; }
+.rj-exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 2px; }
+.rj-exp-title { font-size: 13px; font-weight: 700; color: #2d3748; }
+.rj-date { font-size: 11px; color: #718096; white-space: nowrap; }
+.rj-body { font-size: 12.5px; color: #2d3748; line-height: 1.65; }
+.rj-num { color: #1a56db; font-weight: 700; }
+
 /* 打印：只输出简历页，隐藏导航和按钮 */
 @page { size: A4; margin: 0; }
 @media print {
@@ -492,6 +523,7 @@ h2 { font-size: 16px; font-weight: 650; }
   body { background: #fff !important; }
   .resume-sheet { box-shadow: none; border: none; max-width: none; width: 210mm; margin: 0; padding: 14mm 15mm; box-sizing: border-box; }
   .resume-columns { padding: 0; }
+  .resume-swjtu { padding: 0; min-height: 296mm; }
 }
 
 /* =====================================================================

@@ -268,6 +268,12 @@ create table if not exists public.resumes (
   updated_at     timestamptz not null default now()
 );
 
+-- 西南交大版模板扩展字段（旧库升级：直接执行本节即可，幂等）
+alter table public.resumes add column if not exists degree_sub text;  -- 姓名下方副标题（学历·专业）
+alter table public.resumes add column if not exists education  text;  -- 教育背景（每行一条，第一行校名·专业）
+alter table public.resumes add column if not exists languages  text;  -- 语言能力（每行一项）
+alter table public.resumes add column if not exists prof_skills text; -- 专业技能（每行一项）
+
 -- =====================================================================
 -- 索引（提升查询性能）
 -- =====================================================================
