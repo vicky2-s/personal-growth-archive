@@ -18,10 +18,10 @@
 
   // 西南交大版模板的默认文案（照片与校徽为固定素材 assets/photo.png、assets/school-logo.png）
   const SWJTU_DEFAULTS = {
-    degree_sub: '法语语言文学·大三在读',
-    education: '西南交通大学·法语语言文学 2023.09–2027.06\n主修课程：综合法语、法语听说、法语文学 | 法语专四已参考，成绩待公布\n英语CET-4 543（口语良好）·CET-6 473（口语合格）',
-    languages: '法语（专四已考，成绩未出）\n英语CET-4 543\n英语CET-6 473',
-    prof_skills: 'Office办公套件\nAI辅助翻译工作流',
+    degree_sub: '法语语言文学·大四在读',
+    education: '西南交通大学·法语语言文学 2023.09–2027.06\n专业方向：法语语言 · 法语文学 · 法语翻译 · 法国文化 · 跨文化交际\n法语专四已通过（TEM-4）\n英语CET-4 543 · CET-6 473',
+    languages: '法语（TEM-4 已通过）\n英语CET-4 543\n英语CET-6 473',
+    prof_skills: 'Microsoft Office（Word/Excel/PPT）\n秀米 · Canva · 剪映\nAI辅助开发与工作流设计',
   };
 
   window.Router.register('/resume', {
